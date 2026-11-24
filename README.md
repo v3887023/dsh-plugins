@@ -26,3 +26,16 @@ Then browse and install any plugin from the Discover tab.
 | `@v3887023/dsh-session-reference` | Reference a Session into the current conversation. |
 
 Each package lives under `packages/` and is installed from its own directory.
+
+## Releasing an update
+
+After changing a package under `packages/`, run:
+
+``bash
+node scripts/release.mjs <package-dir> <version>
+``
+
+It checks the package (name matches its bundle patch, no local path
+dependencies), bumps the version, commits and tags it, pushes, then points
+`dsh-index.json` at the new commit so DSH's Discover tab offers the update.
+Add `--dry-run` to only run the checks.
