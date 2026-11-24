@@ -79,7 +79,8 @@
             "path": "packages/dsh-noir-skin"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-noir-skin/icon.svg"
     },
     {
       "name": "@v3887023/dsh-session-date-groups",
@@ -103,7 +104,8 @@
             "path": "packages/dsh-session-date-groups"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-session-date-groups/icon.svg"
     },
     {
       "name": "@v3887023/dsh-session-reference",
@@ -127,7 +129,8 @@
             "path": "packages/dsh-session-reference"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-session-reference/icon.svg"
     },
     {
       "name": "@v3887023/dsh-session-sort-lock",
@@ -151,7 +154,8 @@
             "path": "packages/dsh-session-sort-lock"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-session-sort-lock/icon.svg"
     },
     {
       "name": "@v3887023/dsh-session-split",
@@ -175,7 +179,8 @@
             "path": "packages/dsh-session-split"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-session-split/icon.svg"
     },
     {
       "name": "@v3887023/dsh-workspace-drop",
@@ -199,7 +204,8 @@
             "path": "packages/dsh-workspace-drop"
           }
         }
-      ]
+      ],
+      "icon": "packages/dsh-workspace-drop/icon.svg"
     }
   ]
 }
