@@ -10,35 +10,8 @@
   },
   "plugins": [
     {
-      "name": "@v3887023/dsh-bold-color",
-      "title": {
-        "en": "Colour the markdown bold text.",
-        "zh": "给 Markdown 加粗文字上色。"
-      },
-      "description": {
-        "en": "Colour the markdown bold text.",
-        "zh": "给 Markdown 加粗文字上色。"
-      },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-bold-color",
-      "versions": [
-        {
-          "version": "1.1.0",
-          "publishTimestamp": 1795535003,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "30bbc1e54a39f07622496251463246acb68f5c64",
-            "path": "packages/dsh-bold-color"
-          }
-        }
-      ]
-    },
-    {
       "name": "@v3887023/dsh-desktop-notify",
-      "title": {
-        "en": "Desktop notifications when a Session finishes.",
-        "zh": "会话完成时发送桌面通知。"
-      },
+      "title": "dsh-desktop-notify",
       "description": {
         "en": "Desktop notifications when a Session finishes.",
         "zh": "会话完成时发送桌面通知。"
@@ -59,10 +32,7 @@
     },
     {
       "name": "@v3887023/dsh-noir-skin",
-      "title": {
-        "en": "Graphite and champagne theme.",
-        "zh": "墨金（石墨 + 香槟金）外观主题。"
-      },
+      "title": "dsh-noir-skin",
       "description": {
         "en": "Graphite and champagne theme.",
         "zh": "墨金（石墨 + 香槟金）外观主题。"
@@ -84,10 +54,7 @@
     },
     {
       "name": "@v3887023/dsh-session-date-groups",
-      "title": {
-        "en": "Group the sidebar Session list by day.",
-        "zh": "侧栏会话按日期分组。"
-      },
+      "title": "dsh-session-date-groups",
       "description": {
         "en": "Group the sidebar Session list by day.",
         "zh": "侧栏会话按日期分组。"
@@ -109,10 +76,7 @@
     },
     {
       "name": "@v3887023/dsh-session-reference",
-      "title": {
-        "en": "Reference a Session into the current conversation.",
-        "zh": "把某个会话引用到当前对话。"
-      },
+      "title": "dsh-session-reference",
       "description": {
         "en": "Reference a Session into the current conversation.",
         "zh": "把某个会话引用到当前对话。"
@@ -134,10 +98,7 @@
     },
     {
       "name": "@v3887023/dsh-session-sort-lock",
-      "title": {
-        "en": "Keep the sidebar order stable.",
-        "zh": "固定侧栏会话顺序。"
-      },
+      "title": "dsh-session-sort-lock",
       "description": {
         "en": "Keep the sidebar order stable.",
         "zh": "固定侧栏会话顺序。"
@@ -159,10 +120,7 @@
     },
     {
       "name": "@v3887023/dsh-session-split",
-      "title": {
-        "en": "Split the main area into side-by-side live Session panes.",
-        "zh": "把主区域分成并排的多个实时会话窗格。"
-      },
+      "title": "dsh-session-split",
       "description": {
         "en": "Split the main area into side-by-side live Session panes.",
         "zh": "把主区域分成并排的多个实时会话窗格。"
@@ -184,10 +142,7 @@
     },
     {
       "name": "@v3887023/dsh-workspace-drop",
-      "title": {
-        "en": "Drop files into the workspace.",
-        "zh": "把文件拖进工作区。"
-      },
+      "title": "dsh-workspace-drop",
       "description": {
         "en": "Drop files into the workspace.",
         "zh": "把文件拖进工作区。"
