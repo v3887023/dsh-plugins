@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Grupos por data na lista de sessões",
+    "description": "Na visualização de lista única, a barra lateral agrupa as sessões em Fixadas, Hoje, Ontem e um cabeçalho por dia do calendário; cada cabeçalho pode ser recolhido e apenas Hoje e Fixadas começam abertos."
+  }
+}

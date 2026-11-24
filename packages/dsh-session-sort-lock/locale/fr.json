@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Verrouiller l'ordre « Dernière mise à jour »",
+    "description": "Avec l'ordre « Dernière mise à jour », glisser une session ne bascule plus la liste en ordre manuel."
+  }
+}

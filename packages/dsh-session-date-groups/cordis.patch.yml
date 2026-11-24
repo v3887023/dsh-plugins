@@ -1,0 +1,3 @@
+- insert:
+    - id: session-date-groups
+      name: '@v3887023/dsh-session-date-groups'

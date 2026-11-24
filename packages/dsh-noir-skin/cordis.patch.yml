@@ -1,0 +1,6 @@
+# Noir Skin profile patch layer — one Loader entry for the package. The browser
+# half is mounted through the package's `dsh.client` declaration, exactly like
+# the shipped ui-* packages, so the patch adds no Host rows of its own.
+- insert:
+    - id: noir-skin
+      name: '@v3887023/dsh-noir-skin'

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Drop folders onto the sidebar",
+    "description": "Dropping a folder on the sidebar adds it as a Workspace and opens a new Session in it."
+  }
+}

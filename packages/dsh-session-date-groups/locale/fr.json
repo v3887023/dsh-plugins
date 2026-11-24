@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Groupes par date dans la liste des sessions",
+    "description": "Dans la vue en liste unique, la barre latérale regroupe les sessions sous Épinglées, Aujourd’hui, Hier et un en-tête par jour ; chaque en-tête se replie, et seuls Aujourd’hui et Épinglées sont ouverts."
+  }
+}

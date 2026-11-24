@@ -1,0 +1,38 @@
+{
+  "name": "@v3887023/dsh-desktop-notify",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shows a custom always-on-top desktop card and plays a chime when a Session finishes a turn, needs approval, or waits for an answer; one card per Session, clicking a card opens that Session.",
+  "scripts": {
+    "test": "node test/host.test.mjs"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "notifier/*.ps1",
+    "locale/*.json",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v3887023/dsh-plugins.git",
+    "directory": "packages/dsh-desktop-notify"
+  },
+  "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-desktop-notify"
+}

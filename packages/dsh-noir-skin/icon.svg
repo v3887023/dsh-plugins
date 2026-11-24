@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" role="img" aria-label="Noir skin">
+  <circle cx="18" cy="18" r="11" fill="#18181B"/>
+  <path d="M18 7a11 11 0 0 1 0 22Z" fill="#F2EFE9"/>
+  <circle cx="18" cy="18" r="11" fill="none" stroke="#C9A86A" stroke-width="1.5"/>
+</svg>

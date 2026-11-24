@@ -1,0 +1,3 @@
+- insert:
+    - id: workspace-drop
+      name: '@v3887023/dsh-workspace-drop'

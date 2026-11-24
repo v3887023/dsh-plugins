@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Drop a folder onto the sidebar">
+  <defs>
+    <linearGradient id="folder" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8cff"/>
+      <stop offset="1" stop-color="#3157d8"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#11162b"/>
+  <path d="M14 22.5a3.5 3.5 0 0 1 3.5-3.5h8.2c1 0 1.9.4 2.6 1.1l2.2 2.2h15a3.5 3.5 0 0 1 3.5 3.5v18a3.5 3.5 0 0 1-3.5 3.5h-28A3.5 3.5 0 0 1 14 44.5v-22Z" fill="url(#folder)"/>
+  <path d="M32 28.5v13" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="m26.4 34.1 5.6 5.6 5.6-5.6" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

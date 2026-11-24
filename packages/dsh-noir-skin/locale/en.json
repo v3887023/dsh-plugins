@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Noir skin",
+    "description": "Repoints the shell's alias palette to graphite and champagne through one revocable token layer: deeper surface steps, finer hairlines, and an accent you can set to gold, copper, or teal. Toggle it in Settings → Appearance → Noir skin; changes apply immediately and turning it off restores the shipped DSH palette.",
+    "detail": "docs/DETAIL.en.md"
+  }
+}

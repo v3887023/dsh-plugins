@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Grupos por fecha en la lista de sesiones",
+    "description": "En la vista de una sola lista, la barra lateral agrupa las sesiones en Fijadas, Hoy, Ayer y un encabezado por día del calendario; cada encabezado se pliega y solo Hoy y Fijadas aparecen abiertos."
+  }
+}

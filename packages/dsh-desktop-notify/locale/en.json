@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Desktop notifications",
+    "description": "Shows a persistent custom desktop card and plays a chime when a Session finishes a turn, needs approval, or waits for an answer; clicking a card opens that Session."
+  }
+}

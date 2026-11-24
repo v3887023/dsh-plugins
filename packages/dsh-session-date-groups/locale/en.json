@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Date groups in the session list",
+    "description": "In the single-list view the sidebar groups Sessions under Pinned, Today, Yesterday, and one header per calendar day; every header collapses, and only Today and Pinned start open."
+  }
+}
