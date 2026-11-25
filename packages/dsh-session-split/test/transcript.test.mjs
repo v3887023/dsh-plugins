@@ -10,6 +10,11 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 
 const SOURCE = fs.readFileSync(new URL('../client.js', import.meta.url), 'utf8')
+// The loader keys a browser bundle by the package name in its `dsh.client`
+// declaration, so a registration id that drifts from package.json makes the
+// module system reject the bundle ("loaded without registering") and the plugin
+// never mounts. Read the manifest instead of repeating the name here.
+const PACKAGE_NAME = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).name
 
 /** Minimal React surface the bundle touches at factory time. */
 const ReactStub = {
@@ -49,7 +54,7 @@ function boot(options = {}) {
   const run = new Function('window', 'document', 'console', 'Element', SOURCE)
   run(window, document, console, Element)
   assert.equal(entries.length, 1, 'the bundle registers exactly one module')
-  assert.equal(entries[0].id, '@local/dsh-session-split')
+  assert.equal(entries[0].id, PACKAGE_NAME, 'the bundle registers under its package name')
 
   const plugin = entries[0].factory((id) => {
     if (id === 'react') return ReactStub

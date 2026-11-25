@@ -35,7 +35,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-session-split',
+  id: '@v3887023/dsh-session-split',
   factory(require) {
     const React = require('react')
     const h = React.createElement
@@ -3168,7 +3168,7 @@ window.__ModuleLoader__.load({
 
         ctx.effect(() => {
           const style = document.createElement('style')
-          style.dataset.plugin = '@local/dsh-session-split'
+          style.dataset.plugin = '@v3887023/dsh-session-split'
           style.textContent = CSS
           document.head.append(style)
           return () => style.remove()

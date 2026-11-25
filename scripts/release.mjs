@@ -60,6 +60,13 @@ if (syncFrom !== undefined) {
     if (fs.existsSync(syncedPatch)) {
       fs.writeFileSync(syncedPatch, fs.readFileSync(syncedPatch, 'utf8').split(previousName).join(synced.name))
     }
+    // The browser half registers itself under the package name. Renaming only
+    // the manifest and the patch leaves the bundle unregisterable, which the
+    // module system reports as "loaded without registering".
+    const syncedClient = path.join(packageDir, 'client.js')
+    if (fs.existsSync(syncedClient)) {
+      fs.writeFileSync(syncedClient, fs.readFileSync(syncedClient, 'utf8').split(previousName).join(synced.name))
+    }
     console.log(`synced ${syncFrom} -> ${packageDir} (${previousName} -> ${synced.name})`)
   }
 }
@@ -75,6 +82,12 @@ const patchPath = path.join(packageDir, 'cordis.patch.yml')
 if (fs.existsSync(patchPath)) {
   const patchName = /name:\s*['"]?([^'"\n]+)['"]?/.exec(fs.readFileSync(patchPath, 'utf8'))?.[1]?.trim()
   if (patchName !== pkg.name) fail(`cordis.patch.yml names ${patchName}, package.json names ${pkg.name}`)
+}
+
+const clientPath = path.join(packageDir, 'client.js')
+if (fs.existsSync(clientPath)) {
+  const registered = /__ModuleLoader__\.load\(\{[\s\S]{0,400}?\bid:\s*['"]([^'"]+)['"]/.exec(fs.readFileSync(clientPath, 'utf8'))?.[1]
+  if (registered !== pkg.name) fail(`client.js registers as ${registered}, package.json names ${pkg.name}`)
 }
 
 for (const [name, range] of Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })) {
