@@ -178,6 +178,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-reference",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795571870,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "6a9d9d799cc9069dea589f319f6a84ca435f1b2e",
+            "path": "packages/dsh-session-reference"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795535003,
           "source": {
