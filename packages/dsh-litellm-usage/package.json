@@ -1,6 +1,6 @@
 {
   "name": "@v3887023/dsh-litellm-usage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Shows LiteLLM proxy key usage and remaining budget at the sidebar foot.",
