@@ -2856,12 +2856,21 @@ window.__ModuleLoader__.load({
             if (node === null || node === undefined || String(node.textContent ?? '').trim() === '') setPhase('collapsed')
           }, 120)
         }
+        // The composer's model / permission / reasoning menus are portalled to
+        // `document.body`, i.e. outside the pane. Treat a press or focus inside
+        // one of those overlays as "still editing here", otherwise picking a
+        // model collapses the composer (and the menu with it) before the pick
+        // lands.
+        const inOverlay = (target) => target instanceof Element
+          && target.closest('[role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"], [role="tooltip"]') !== null
         const onFocusOut = (event) => {
           if (pane.contains(event.relatedTarget)) return
+          if (inOverlay(event.relatedTarget)) return
           collapseIfEmpty()
         }
         const onPointerDown = (event) => {
           if (event.target instanceof Node && pane.contains(event.target)) return
+          if (inOverlay(event.target)) return
           collapseIfEmpty()
         }
         pane.addEventListener('focusout', onFocusOut)
