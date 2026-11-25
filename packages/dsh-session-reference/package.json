@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "Adds a \"Reference in current chat\" row to a Session's sidebar context menu, inserting the same @session reference the composer's @ menu inserts.",
+  "description": "Adds a \"Reference in current chat\" row to a Session's sidebar context menu, inserting the same @session reference the composer's @ menu inserts. Superseded by @v3887023/dsh-session-drag.",
   "scripts": {
     "test": "node test/mention.test.mjs && node test/registration.test.mjs"
   },

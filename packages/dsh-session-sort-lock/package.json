@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "Keeps the sidebar's \"Last updated\" order honest: a Session drag can no longer flip the list to manual ordering.",
+  "description": "Keeps the sidebar's \"Last updated\" order honest: a Session drag can no longer flip the list to manual ordering. Superseded by @v3887023/dsh-session-drag.",
   "scripts": {
     "test": "node test/lock.test.mjs"
   },

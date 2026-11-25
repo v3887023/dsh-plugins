@@ -1,5 +1,12 @@
 # Keep the sidebar's “Last updated” order
 
+> **Superseded.** This plugin is now half of
+> [`@v3887023/dsh-session-drag`](../dsh-session-drag/README.md), which owns the
+> whole Session drag gesture — the reference and the "Last updated" order lock —
+> in one bundle, so the refusal and the drag-to-composer tag are decided in one
+> handler instead of two competing capture listeners. Disable this plugin
+> **before** installing that one.
+
 `@v3887023/dsh-session-sort-lock` stops a Session drag from silently replacing the
 sidebar's **Last updated** order with a manual one.
 

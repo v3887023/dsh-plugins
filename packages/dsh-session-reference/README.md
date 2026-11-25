@@ -1,5 +1,12 @@
 # Reference a session in the current chat
 
+> **Superseded.** This plugin is now half of
+> [`@v3887023/dsh-session-drag`](../dsh-session-drag/README.md), which owns the
+> whole Session drag gesture — the reference and the "Last updated" order lock —
+> in one bundle. Disable this plugin **before** installing that one: both would
+> register the menu row, and two drag handlers over the same window events would
+> fight each other.
+
 `@v3887023/dsh-session-reference` adds one row, **引用到当前对话**, to a Session's
 sidebar context menu. Picking it inserts the same Session reference the
 composer's `@` menu inserts: an atomic chip in the current draft carrying the
