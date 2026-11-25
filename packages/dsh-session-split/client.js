@@ -1173,6 +1173,14 @@ window.__ModuleLoader__.load({
     /** Marks an `openWorkspace` hook installed by this bundle. */
     const OPEN_WORKSPACE_HOOK = Symbol.for('@v3887023/dsh-session-split/openWorkspace')
 
+    /**
+     * Sessions this workbench created as blank panes (hero) and that are still
+     * blank. A Workspace choice from a hero belongs to that pane, so the picker
+     * swaps it in place instead of stacking another empty pane. The pane drops
+     * its own id from the set as soon as it stops being a hero.
+     */
+    const heroSessions = new Set()
+
     /** Whether the workbench panel currently owns the main column. */
     function workbenchActive(ctx) {
       try {
@@ -1193,25 +1201,20 @@ window.__ModuleLoader__.load({
         flashPane(sessionId)
         return
       }
-      const byId = (() => {
-        try {
-          return sessionListState(ctx)?.byId ?? {}
-        } catch {
-          return {}
-        }
-      })()
-      // A hero (never prompted) pane is the natural slot for a new Workspace
-      // choice: the user is picking where the conversation they are writing
-      // belongs, not opening yet another empty pane.
-      const heroIndex = paneStore.panes.findIndex((id) => byId[id]?.blank === true)
-      if (heroIndex >= 0) {
-        const replaced = paneStore.panes[heroIndex]
+      // A hero pane (a blank Session this workbench created) is the natural
+      // slot for a new Workspace choice: the user is picking where the
+      // conversation they are writing belongs, not opening yet another pane.
+      const heroId = paneStore.panes.find((id) => heroSessions.has(id))
+      if (heroId !== undefined) {
         const next = paneStore.panes.slice()
-        next[heroIndex] = sessionId
+        next[next.indexOf(heroId)] = sessionId
+        heroSessions.delete(heroId)
+        heroSessions.add(sessionId)
         setPanes(next)
-        releaseSession(replaced)
+        releaseSession(heroId)
         return
       }
+      heroSessions.add(sessionId)
       setPanes(addPane(paneStore.panes, sessionId))
     }
 
@@ -1238,7 +1241,15 @@ window.__ModuleLoader__.load({
           if (!workbenchActive(ctx)) return original.call(workspace, workspaceId, beforeOpen, options)
           const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
           if (sessions === undefined || sessions === null || typeof sessions.create !== 'function') return undefined
-          return Promise.resolve(sessions.create({ workspaceId })).then((created) => {
+          return Promise.resolve(sessions.create({ workspaceId })).then(async (created) => {
+            if (typeof created !== 'string' || created === '') return
+            // Warm the binding before the swap so the pane mounts ready instead
+            // of flashing its loading state.
+            try {
+              await acquireSession(ctx, created).promise
+            } catch {
+              // The pane falls back to its own loading/error state.
+            }
             showInPane(ctx, created)
           }).catch((error) => {
             console.warn('[session-split] opening a Workspace in a pane failed:', error)
@@ -1418,6 +1429,7 @@ window.__ModuleLoader__.load({
 
     /** Drop one cached Session reference (pane removed, retry, clearing). */
     function releaseSession(sessionId) {
+      heroSessions.delete(sessionId)
       const entry = retainCache.get(sessionId)
       if (entry === undefined) return
       retainCache.delete(sessionId)
@@ -2630,6 +2642,12 @@ window.__ModuleLoader__.load({
       const title = sessionTitle(ctx, sessionId) ?? titleFromEvents(entries) ?? t('pane.untitled')
       const lastUserTexts = useMemo(() => new Set(rows.filter((row) => row.kind === 'user').map((row) => row.text)), [rows])
       const contentPhase = contentPhaseOf(sessionSnapshot)
+      // Keep the hero-pane registry honest: a pane is replaceable by a
+      // Workspace choice only while it is still a blank conversation.
+      useEffect(() => {
+        if (contentPhase.phase === 'hero') heroSessions.add(sessionId)
+        else heroSessions.delete(sessionId)
+      }, [contentPhase.phase, sessionId])
       const subagents = subagentEntries(sessionListState(ctx), sessionId)
       // A parent whose subagent is working is "in progress" on the shipped
       // Session row too, so the pane's own status dot follows the same rule.
@@ -3078,6 +3096,7 @@ window.__ModuleLoader__.load({
         try {
           const created = await sessions.create(target !== undefined ? { workspaceId: target.workspaceId } : {})
           if (typeof created !== 'string' || created === '') return false
+          heroSessions.add(created)
           setPanes(addPane(paneStore.panes, created))
           return true
         } catch (error) {
