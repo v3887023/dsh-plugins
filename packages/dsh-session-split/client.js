@@ -1551,12 +1551,14 @@ window.__ModuleLoader__.load({
       // shipped page never carries that attribute, so its layout is untouched.
       '.ssp-pane [data-ssp-chat-holder]{padding-left:16px;padding-right:16px}',
       '.ssp-pane [data-ssp-chat-holder]>[data-chat-flow]{margin-left:0;margin-right:0;max-width:none}',
-      // User bubbles get a wider cap inside a pane. The shipped user stack caps
-      // at min(0.702 * (100% - 32px), 82%) — about 65% of a narrow pane — so the
-      // stack is released and the bubble itself is capped at 80% of the row.
-      // `border-box` makes that percentage the visible width, padding included.
-      '.ssp-pane [data-chat-flow-kind="user"] :has(> [data-message-bubble]){max-width:100%}',
-      '.ssp-pane [data-chat-flow-kind="user"] [data-message-bubble]{box-sizing:border-box;max-width:80%}',
+      // User bubbles get a wider cap inside a pane: the shipped user stack caps
+      // at min(0.702 * (100% - 32px), 82%), about 65% of a narrow pane. Capping
+      // the stack (not the bubble) keeps short bubbles at their natural width —
+      // a percentage on the bubble resolves against the stack, which shrinks to
+      // its content and would wrap even a two-word bubble. The 32px subtracted
+      // is the bubble's own left and right padding, so the visible bubble still
+      // reaches 80% of the row.
+      '.ssp-pane [data-chat-flow-kind="user"] :has(> [data-message-bubble]){max-width:calc(80% - 32px)}',
       // Compact composer: a placeholder bar laid over the pane's bottom edge.
       // It is absolutely positioned so showing/hiding it never re-flows the
       // message list — only opacity animates, which is what keeps it steady.
