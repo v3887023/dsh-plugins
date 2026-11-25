@@ -45,7 +45,7 @@ const ReactStub = {
 
 class FakeElement {}
 
-function boot(storage = new Map()) {
+function boot(storage = new Map(), options = {}) {
   const entries = []
   const window = {
     __ModuleLoader__: { load: (entry) => entries.push(entry) },
@@ -80,7 +80,12 @@ function boot(storage = new Map()) {
               byId: {
                 s1: { id: 's1', title: 'Alpha', retainedBy: { mainView: 1 } },
                 s2: { id: 's2', title: 'Beta', retainedBy: {} },
+                ...(options.childRunning === true ? { c1: { id: 'c1', title: 'Child', running: true } } : {}),
               },
+              // A subagent the pane knows about; only its parent's pane reads it.
+              projectionsBySession: options.childRunning === true
+                ? { s2: { values: { subagentCatalog: [{ id: 'c1', label: 'Child' }] } } }
+                : {},
             }),
           },
           retain() { throw new Error('retain is not exercised here') },
@@ -254,6 +259,34 @@ function classesOf(node, found = []) {
   assert.equal(parts[0].type, 'button')
   assert.equal(parts[0].props['aria-label'], 'pane.outline')
   assert.equal(parts[0].props['data-active'], undefined)
+}
+
+// --- a pane whose subagent is working reads as running -------------------
+{
+  const shell = boot(new Map(), { childRunning: true })
+  const api = shell.plugin.__internals
+  api.setPanes(['s2'])
+  const tree = render(api.SessionPane, { sessionId: 's2', t: (key) => key })
+  const head = tree.children[0]
+  assert.equal(head.children[0].props['data-state'], 'running', 'a working subagent marks the pane busy')
+  assert.equal(head.children[0].props.title, 'pane.childRunning')
+  const chips = head.children.find((child) => typeof child?.type === 'function' && child.type.name === 'SubagentChips')
+  assert.ok(chips !== undefined, 'the subagent chip is shown while it runs')
+}
+
+// --- a finished, unseen pane reads as done -------------------------------
+{
+  const shell = boot()
+  const api = shell.plugin.__internals
+  api.setPanes(['s2'])
+  const tree = render(api.SessionPane, { sessionId: 's2', t: (key) => key, unread: true })
+  assert.equal(tree.props['data-unread'], '', 'the pane is marked finished and unseen')
+  const head = tree.children[0]
+  const done = head.children.find((child) => child?.props?.className === 'ssp-pane-done')
+  assert.ok(done !== undefined, 'the header shows the Done badge')
+  assert.equal(done.children[0], 'pane.done')
+  assert.equal(head.children[0].props['data-state'], 'unread')
+  assert.equal(head.children[0].props.title, 'pane.unread')
 }
 
 // --- sidebar entry and drop hint ----------------------------------------

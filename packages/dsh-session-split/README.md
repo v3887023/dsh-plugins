@@ -76,8 +76,14 @@ view built from the retained event window.
   The menu footer states the total. Without that projection (a subagent pane, or
   an assembly without it) the outline falls back to the user rows already on
   screen, which is exactly what the pane itself can show.
-- **Add sessions from the toolbar**: `＋ Add session` lists every Session that
-  is not already a pane; the list has search plus a **Group by workspace**
+- **A pane is busy while its own Turn runs or while one of its subagents is
+  working** — the header dot pulses for both (the subagent chip's dot pulses
+  too), matching how the shipped Session row reports activity. Hovering the dot
+  says which of the two it is.
+- **A finished, unseen pane is marked strongly**: the dot grows into a breathing
+  ring, the title bar and the pane border take a success tint, and a **Done**
+  badge appears next to the title. Focusing the pane clears it (see below).
+- **Add sessions from the toolbar**: `＋ Add session` lists every Session that is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
 - **`Highlight opened` switch** (on by default): opening a Session that is
   already a pane keeps the workbench and flashes that pane instead of opening

@@ -105,6 +105,8 @@ window.__ModuleLoader__.load({
       'pane.failed': '无法读取这个会话',
       'pane.retry': '重试',
       'pane.running': '运行中',
+      'pane.childRunning': '子 Agent 运行中',
+      'pane.done': '已完成',
       'pane.idle': '空闲',
       'pane.more': '更早的消息请到原生会话查看',
       'pane.toolRunning': '执行中',
@@ -169,6 +171,8 @@ window.__ModuleLoader__.load({
       'pane.failed': 'Could not load this conversation',
       'pane.retry': 'Retry',
       'pane.running': 'Running',
+      'pane.childRunning': 'Subagent running',
+      'pane.done': 'Done',
       'pane.idle': 'Idle',
       'pane.more': 'Older messages live in the native conversation',
       'pane.toolRunning': 'running',
@@ -1558,16 +1562,23 @@ window.__ModuleLoader__.load({
       // anything, which reads as the bar growing into the real input.
       '@keyframes ssp-composer-reveal{from{clip-path:inset(55% 0 0 0);opacity:.55}to{clip-path:inset(0 0 0 0);opacity:1}}',
       '@keyframes ssp-bar-in{from{opacity:0;transform:translateY(10px)}to{opacity:.62;transform:none}}',
-      '@media (prefers-reduced-motion:reduce){.ssp-compact-bar,.ssp-pane[data-compact]:not([data-collapsed]) [data-composer-card]{animation:none;transition:none}}',
+      '@media (prefers-reduced-motion:reduce){.ssp-compact-bar,.ssp-pane[data-compact]:not([data-collapsed]) [data-composer-card],.ssp-dot[data-state="running"],.ssp-dot[data-state="unread"],.ssp-chip[data-running="running"] .ssp-chip-dot{animation:none;transition:none}}',
       // A 48px title bar: `min-height` + centred content, not padding, decides
       // the height, so a longer title or a subagent chip never makes one pane's
       // bar taller than its neighbours'.
       '.ssp-pane-head{flex:0 0 auto;display:flex;align-items:center;gap:6px;box-sizing:border-box;min-height:48px;padding:0 10px;border-bottom:1px solid color-mix(in srgb,var(--dsw-alias-border-l1) 55%,transparent);background:transparent;cursor:grab;user-select:none}',
       '.ssp-pane-head:active{cursor:grabbing}',
-      '.ssp-dot{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto}',
+      '.ssp-dot{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto;transition:width 120ms ease,height 120ms ease}',
       '.ssp-dot[data-state="running"]{background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-success-primary) 22%,transparent);animation:ssp-pulse 1.6s ease-in-out infinite}',
-      '.ssp-dot[data-state="unread"]{background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-success-primary) 30%,transparent)}',
+      // A finished-but-unseen pane has to be readable from across the room: a
+      // larger dot with a breathing ring, a tinted title bar and a "Done"
+      // badge, so an idle pane and one waiting for the user never read alike.
+      '.ssp-dot[data-state="unread"]{width:8px;height:8px;background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-success-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);animation:ssp-unread-pulse 1.6s ease-in-out infinite}',
       '@keyframes ssp-pulse{0%,100%{opacity:1}50%{opacity:.45}}',
+      '@keyframes ssp-unread-pulse{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-success-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-success-primary) 42%,transparent),0 0 0 11px transparent}}',
+      '.ssp-pane[data-unread]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 42%,var(--dsw-alias-border-l1))}',
+      '.ssp-pane[data-unread] .ssp-pane-head{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 9%,transparent)}',
+      '.ssp-pane-done{flex:0 0 auto;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 20%,transparent);color:var(--dsw-alias-state-success-primary);font-size:10.5px;font-weight:600;line-height:17px;letter-spacing:.01em}',
       '.ssp-dot[data-state="error"]{background:var(--dsw-alias-state-error-primary)}',
       '.ssp-pane-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600;letter-spacing:.01em}',
       '.ssp-icon-btn{appearance:none;border:0;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;padding:1px 4px;border-radius:5px;font-size:12px;line-height:16px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
@@ -1584,7 +1595,7 @@ window.__ModuleLoader__.load({
       '.ssp-pane-flash{position:relative;z-index:2;outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:-2px;animation:ssp-flash-out 1.6s ease-out forwards}',
       '@keyframes ssp-flash-out{0%{outline-color:var(--dsw-alias-state-business-primary)}70%{outline-color:var(--dsw-alias-state-business-primary)}100%{outline-color:transparent}}',
       '.ssp-chip-dot{width:5px;height:5px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto}',
-      '.ssp-chip[data-running="running"] .ssp-chip-dot{background:var(--dsw-alias-state-success-primary)}',
+      '.ssp-chip[data-running="running"] .ssp-chip-dot{background:var(--dsw-alias-state-success-primary);animation:ssp-pulse 1.6s ease-in-out infinite}',
       '.ssp-chip-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-menu{position:fixed;z-index:2147483000;min-width:170px;max-width:280px;max-height:300px;overflow:auto;padding:4px;border-radius:9px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 10px 28px rgba(0,0,0,.35)}',
       '.ssp-menu-item{appearance:none;display:flex;align-items:center;gap:6px;width:100%;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;text-align:left;padding:5px 8px;border-radius:6px;cursor:pointer}',
@@ -2482,6 +2493,11 @@ window.__ModuleLoader__.load({
       const lastUserTexts = useMemo(() => new Set(rows.filter((row) => row.kind === 'user').map((row) => row.text)), [rows])
       const contentPhase = contentPhaseOf(sessionSnapshot)
       const subagents = subagentEntries(sessionListState(ctx), sessionId)
+      // A parent whose subagent is working is "in progress" on the shipped
+      // Session row too, so the pane's own status dot follows the same rule.
+      const childRunning = subagents.some((child) => child.running)
+      const busy = running || childRunning
+      const unread = props.unread === true && !busy
 
       // Make sure the list has loaded this Session's subagent projection.
       useEffect(() => {
@@ -2726,6 +2742,7 @@ window.__ModuleLoader__.load({
         'data-collapsed': collapsed ? '' : undefined,
         'data-dragging': props.dragging === true ? '' : undefined,
         'data-drop-target': props.dropTarget === true ? '' : undefined,
+        'data-unread': unread ? '' : undefined,
         ref: paneRef,
         // Looking at a pane is enough to acknowledge its "finished, unseen" dot
         // and to remember which Session the user is reading.
@@ -2743,10 +2760,11 @@ window.__ModuleLoader__.load({
           h('span', {
             key: 'dot',
             className: 'ssp-dot',
-            'data-state': retained.status === 'error' ? 'error' : running ? 'running' : props.unread === true ? 'unread' : 'idle',
-            title: props.unread === true && !running ? t('pane.unread') : undefined,
+            'data-state': retained.status === 'error' ? 'error' : busy ? 'running' : unread ? 'unread' : 'idle',
+            title: running ? t('pane.running') : childRunning ? t('pane.childRunning') : unread ? t('pane.unread') : undefined,
           }),
           h('span', { key: 'title', className: 'ssp-pane-title', title }, title),
+          unread ? h('span', { key: 'done', className: 'ssp-pane-done' }, t('pane.done')) : null,
           subagents.length > 0
             ? h(SubagentChips, {
               key: 'chips',
