@@ -1,6 +1,6 @@
 {
   "name": "@v3887023/dsh-deepseek-balance",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Shows the DeepSeek official API key balance at the sidebar foot, as a share of a fixed baseline.",
