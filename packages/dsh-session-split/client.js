@@ -1585,15 +1585,16 @@ window.__ModuleLoader__.load({
       '.ssp-pane-head:active{cursor:grabbing}',
       '.ssp-dot{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto;transition:width 120ms ease,height 120ms ease}',
       '.ssp-dot[data-state="running"]{background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-success-primary) 22%,transparent);animation:ssp-pulse 1.6s ease-in-out infinite}',
-      // A finished-but-unseen pane has to be readable from across the room: a
-      // larger dot with a breathing ring, a tinted title bar and a "Done"
-      // badge, so an idle pane and one waiting for the user never read alike.
-      '.ssp-dot[data-state="unread"]{width:8px;height:8px;background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-success-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);animation:ssp-unread-pulse 1.6s ease-in-out infinite}',
+      // A finished-but-unseen pane has to read differently from a running one:
+      // the running dot is green, so this one takes the business tint, a larger
+      // breathing ring, a tinted title bar and a "Done" badge — an idle pane, a
+      // running pane and a pane waiting for the user never read alike.
+      '.ssp-dot[data-state="unread"]{width:8px;height:8px;background:var(--dsw-alias-state-business-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent);animation:ssp-unread-pulse 1.6s ease-in-out infinite}',
       '@keyframes ssp-pulse{0%,100%{opacity:1}50%{opacity:.45}}',
-      '@keyframes ssp-unread-pulse{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-success-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-success-primary) 42%,transparent),0 0 0 11px transparent}}',
-      '.ssp-pane[data-unread]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 42%,var(--dsw-alias-border-l1))}',
-      '.ssp-pane[data-unread] .ssp-pane-head{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 9%,transparent)}',
-      '.ssp-pane-done{flex:0 0 auto;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 20%,transparent);color:var(--dsw-alias-state-success-primary);font-size:10.5px;font-weight:600;line-height:17px;letter-spacing:.01em}',
+      '@keyframes ssp-unread-pulse{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 34%,transparent),0 0 0 6px color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent)}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-business-primary) 42%,transparent),0 0 0 11px transparent}}',
+      '.ssp-pane[data-unread]{border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 42%,var(--dsw-alias-border-l1))}',
+      '.ssp-pane[data-unread] .ssp-pane-head{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 10%,transparent)}',
+      '.ssp-pane-done{flex:0 0 auto;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 20%,transparent);color:var(--dsw-alias-state-business-primary);font-size:10.5px;font-weight:600;line-height:17px;letter-spacing:.01em}',
       '.ssp-dot[data-state="error"]{background:var(--dsw-alias-state-error-primary)}',
       '.ssp-pane-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600;letter-spacing:.01em}',
       '.ssp-icon-btn{appearance:none;border:0;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;padding:1px 4px;border-radius:5px;font-size:12px;line-height:16px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
