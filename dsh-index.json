@@ -178,6 +178,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-sidebar-plus",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795575351,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "7001c6c9c7804521311ac9e6c44dce1cf32ce733",
+            "path": "packages/dsh-sidebar-plus"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795574793,
           "source": {
