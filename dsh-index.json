@@ -114,6 +114,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-noir-skin",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795571829,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "5e413ccd3daeee9da26c7b404a8b611252572268",
+            "path": "packages/dsh-noir-skin"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795535003,
           "source": {
