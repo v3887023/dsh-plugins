@@ -1400,7 +1400,10 @@ window.__ModuleLoader__.load({
       '@keyframes ssp-composer-reveal{from{clip-path:inset(55% 0 0 0);opacity:.55}to{clip-path:inset(0 0 0 0);opacity:1}}',
       '@keyframes ssp-bar-in{from{opacity:0;transform:translateY(10px)}to{opacity:.62;transform:none}}',
       '@media (prefers-reduced-motion:reduce){.ssp-compact-bar,.ssp-pane[data-compact]:not([data-collapsed]) [data-composer-card]{animation:none;transition:none}}',
-      '.ssp-pane-head{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:10px 10px;border-bottom:1px solid color-mix(in srgb,var(--dsw-alias-border-l1) 55%,transparent);background:transparent;cursor:grab;user-select:none}',
+      // A 48px title bar: `min-height` + centred content, not padding, decides
+      // the height, so a longer title or a subagent chip never makes one pane's
+      // bar taller than its neighbours'.
+      '.ssp-pane-head{flex:0 0 auto;display:flex;align-items:center;gap:6px;box-sizing:border-box;min-height:48px;padding:0 10px;border-bottom:1px solid color-mix(in srgb,var(--dsw-alias-border-l1) 55%,transparent);background:transparent;cursor:grab;user-select:none}',
       '.ssp-pane-head:active{cursor:grabbing}',
       '.ssp-dot{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto}',
       '.ssp-dot[data-state="running"]{background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-success-primary) 22%,transparent);animation:ssp-pulse 1.6s ease-in-out infinite}',

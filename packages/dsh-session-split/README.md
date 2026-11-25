@@ -65,7 +65,7 @@ view built from the retained event window.
   in turn. The preview is discarded on cancel and committed on drop.
 - Every pane has its own composer, streaming output, Stop, queue, approvals and
   question cards — they are the host's own components.
-- The pane header carries the Session title (13.5 px), a running dot, a single
+- The pane header is a fixed 48 px bar; it carries the Session title (13.5 px), a running dot, a single
   **`N subagents`** chip (hover lists them, click opens the list to open one in
   a pane), and two stroke icons: open natively and remove pane.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that
