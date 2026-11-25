@@ -1,6 +1,6 @@
 {
   "name": "@v3887023/dsh-desktop-notify",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "private": true,
   "type": "module",
   "description": "Shows a custom always-on-top desktop card and plays a chime when a Session finishes a turn, needs approval, or waits for an answer; one card per Session, clicking a card opens that Session.",
