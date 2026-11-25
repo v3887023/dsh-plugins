@@ -51,6 +51,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-desktop-notify",
       "versions": [
         {
+          "version": "3.0.1",
+          "publishTimestamp": 1795571791,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "897b04eabb0db3ae9bec1f6f5be35d0e5e51b8c2",
+            "path": "packages/dsh-desktop-notify"
+          }
+        },
+        {
           "version": "3.0.0",
           "publishTimestamp": 1795535003,
           "source": {
