@@ -137,60 +137,6 @@
       "icon": "packages/dsh-noir-skin/icon.svg"
     },
     {
-      "name": "@v3887023/dsh-session-date-groups",
-      "title": "dsh-session-date-groups",
-      "description": {
-        "en": "Group the sidebar Session list by day.",
-        "zh": "侧栏会话按日期分组。"
-      },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-date-groups",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "publishTimestamp": 1795571851,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "09f26d931085b7d38b753e1946a7379cb7769d54",
-            "path": "packages/dsh-session-date-groups"
-          }
-        },
-        {
-          "version": "1.0.0",
-          "publishTimestamp": 1795535003,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "30bbc1e54a39f07622496251463246acb68f5c64",
-            "path": "packages/dsh-session-date-groups"
-          }
-        }
-      ],
-      "icon": "packages/dsh-session-date-groups/icon.svg"
-    },
-    {
-      "name": "@v3887023/dsh-session-drag",
-      "title": "dsh-session-drag",
-      "description": {
-        "en": "Drag a Session to reference it; keep the “Last updated” order.",
-        "zh": "拖动会话即可引用它；锁定「最近更新」排序。"
-      },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-drag",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "publishTimestamp": 1795573769,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "ef21eacf73dfc1996d919a05848e8bc7b1aa6965",
-            "path": "packages/dsh-session-drag"
-          }
-        }
-      ],
-      "icon": "packages/dsh-session-drag/icon.svg"
-    },
-    {
       "name": "@v3887023/dsh-session-split",
       "title": "dsh-session-split",
       "description": {
@@ -223,36 +169,26 @@
       "icon": "packages/dsh-session-split/icon.svg"
     },
     {
-      "name": "@v3887023/dsh-workspace-drop",
-      "title": "dsh-workspace-drop",
+      "name": "@v3887023/dsh-sidebar-plus",
+      "title": "dsh-sidebar-plus",
       "description": {
-        "en": "Drop files into the workspace.",
-        "zh": "把文件拖进工作区。"
+        "en": "Sidebar date groups, drag-to-reference, order lock, and folder-drop Workspaces, one switch each.",
+        "zh": "侧栏日期分组、拖拽引用、排序锁定、拖入文件夹建工作区，每项一个开关。"
       },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-workspace-drop",
+      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-sidebar-plus",
       "versions": [
         {
-          "version": "1.0.1",
-          "publishTimestamp": 1795571908,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "65bdd3980e642bfd4751a0f0cefe6bc8ee0ca437",
-            "path": "packages/dsh-workspace-drop"
-          }
-        },
-        {
           "version": "1.0.0",
-          "publishTimestamp": 1795535003,
+          "publishTimestamp": 1795574493,
           "source": {
             "type": "git",
             "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "30bbc1e54a39f07622496251463246acb68f5c64",
-            "path": "packages/dsh-workspace-drop"
+            "commit": "60e008f1a0ca2ef1b6f8729221e2fe6338aa2885",
+            "path": "packages/dsh-sidebar-plus"
           }
         }
       ],
-      "icon": "packages/dsh-workspace-drop/icon.svg"
+      "icon": "packages/dsh-sidebar-plus/icon.svg"
     }
   ]
 }
