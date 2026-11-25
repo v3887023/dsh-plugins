@@ -19,6 +19,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-deepseek-balance",
       "versions": [
         {
+          "version": "0.1.1",
+          "publishTimestamp": 1795571771,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "2fc628c7ac995c982e7c3049e3907340a689384e",
+            "path": "packages/dsh-deepseek-balance"
+          }
+        },
+        {
           "version": "0.1.0",
           "publishTimestamp": 1795571330,
           "source": {
