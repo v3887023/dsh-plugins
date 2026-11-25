@@ -2956,6 +2956,10 @@ window.__ModuleLoader__.load({
         renderFactorySlot: props !== undefined && props !== null ? props.renderFactorySlot : undefined,
       }
 
+      /** True while a Host create request is in flight (one at a time). */
+      const creatingRef = useRef(false)
+      const [creatingSession, setCreatingSession] = useState(false)
+
       /**
        * Create a blank conversation and open it as a pane.
        *
@@ -2965,6 +2969,7 @@ window.__ModuleLoader__.load({
        * Conversation — write, attach and send exactly as on the native page.
        */
       const createConversation = async () => {
+        if (creatingRef.current) return false
         const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
         if (sessions === undefined || sessions === null || typeof sessions.create !== 'function') return false
         const currentId = resolveCurrentSession(ctx)
@@ -2973,6 +2978,8 @@ window.__ModuleLoader__.load({
           ? undefined
           : items.find((item) => Array.isArray(item.sessionIds) && item.sessionIds.includes(currentId))
         const target = owner !== undefined ? owner : (items.length > 0 ? items[0] : undefined)
+        creatingRef.current = true
+        setCreatingSession(true)
         try {
           const created = await sessions.create(target !== undefined ? { workspaceId: target.workspaceId } : {})
           if (typeof created !== 'string' || created === '') return false
@@ -2981,11 +2988,15 @@ window.__ModuleLoader__.load({
         } catch (error) {
           console.warn('[session-split] creating a conversation failed:', error)
           return false
+        } finally {
+          creatingRef.current = false
+          setCreatingSession(false)
         }
       }
 
       /** Shrink the workbench into the floating bar and hand the column back. */
-      const minimize = () => {        setMinimized(true)
+      const minimize = () => {
+        setMinimized(true)
         const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
         try {
           if (layout !== undefined && layout !== null && typeof layout.selectPanel === 'function') layout.selectPanel(null)
@@ -3121,6 +3132,14 @@ window.__ModuleLoader__.load({
               })
             },
           }, `＋ ${t('panel.addSession')}`),
+          h('button', {
+            key: 'newSession',
+            type: 'button',
+            className: 'ssp-btn',
+            disabled: creatingSession,
+            title: t('panel.newConversation'),
+            onClick: () => { void createConversation() },
+          }, creatingSession ? t('panel.creatingConversation') : `＋ ${t('panel.newConversation')}`),
           h('button', {
             key: 'minimize',
             type: 'button',

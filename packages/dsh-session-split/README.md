@@ -96,12 +96,13 @@ view built from the retained event window.
   The shipped page keeps its own cap.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
-- **Start a new conversation from the same picker**: its first row is
-  **＋ New conversation**. It creates a blank Session in the current (or most
-  recent) Workspace on the Host and opens it as a pane — no navigation, so the
-  workbench stays on screen and the new pane renders the shipped blank
-  Conversation, ready to type, attach and send. The Session is an ordinary one:
-  it appears in the sidebar list and keeps its history.
+- **Start a new conversation**: the toolbar's **＋ New conversation** (also the
+  first row of the add-session picker) creates a blank Session in the current
+  (or most recent) Workspace on the Host and opens it as a pane — no navigation,
+  so the workbench stays on screen and the new pane renders the shipped blank
+  Conversation, ready to type, attach and send. A blank pane is exempt from the
+  compact composer switch. The Session is an ordinary one: it appears in the
+  sidebar list and keeps its history.
 - **`Highlight opened` switch** (on by default): opening a Session that is
   already a pane keeps the workbench and flashes that pane instead of opening
   the native page — whether the request comes from a sidebar row, the Session

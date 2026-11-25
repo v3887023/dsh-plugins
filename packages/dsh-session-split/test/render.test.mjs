@@ -135,18 +135,21 @@ function classesOf(node, found = []) {
 
   const title = tree.children[0].children[0]
   assert.equal(title.children[0], '会话分屏')
-  // Toolbar: title, count, columns, spacer, follow, compact, add, minimise, clear.
-  assert.equal(tree.children[0].children.length, 9)
+  // Toolbar: title, count, columns, spacer, follow, compact, add, new, minimise, clear.
+  assert.equal(tree.children[0].children.length, 10)
   const followButton = tree.children[0].children[4]
   assert.equal(followButton.type, 'button')
   const compactButton = tree.children[0].children[5]
   assert.equal(compactButton.type, 'button')
   const addSessionButton = tree.children[0].children[6]
   assert.equal(addSessionButton.type, 'button')
-  const minimizeButton = tree.children[0].children[7]
+  const newSessionButton = tree.children[0].children[7]
+  assert.equal(newSessionButton.type, 'button')
+  assert.equal(newSessionButton.props.disabled, false, 'a new conversation needs no pane')
+  const minimizeButton = tree.children[0].children[8]
   assert.equal(minimizeButton.type, 'button')
   assert.equal(minimizeButton.props.disabled, true, 'nothing to minimise without panes')
-  const clearButton = tree.children[0].children[8]
+  const clearButton = tree.children[0].children[9]
   assert.equal(clearButton.type, 'button')
   assert.equal(clearButton.props.disabled, true)
   // The column control offers Auto/2/3/4.
