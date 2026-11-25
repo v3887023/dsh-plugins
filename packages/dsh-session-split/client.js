@@ -527,18 +527,17 @@ window.__ModuleLoader__.load({
      */
     function openFileOnNativePage(ctx, sessionId, rawPath) {
       const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
-      const uiWorkspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
       const sidebarRight = typeof ctx.get === 'function' ? ctx.get('sidebarRight') : undefined
-      if (uiWorkspace === undefined || uiWorkspace === null || typeof uiWorkspace.openSession !== 'function') return false
+      const uiWorkspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
+      const canOpen = typeof nativeOpenSession === 'function'
+        || (uiWorkspace !== undefined && uiWorkspace !== null && typeof uiWorkspace.openSession === 'function')
+      if (!canOpen) return false
       // Leaving for the native page collapses the workbench, like any other
       // jump away from it, so the floating bar is there to come back to.
       if (paneStore.panes.length > 0) setMinimized(true)
-      try {
-        uiWorkspace.openSession(sessionId)
-      } catch (error) {
-        console.warn('[session-split] revealing the Session failed:', error)
-        return false
-      }
+      // The link has to reach the shipped page even when the Session is a pane,
+      // so this is the un-hooked open.
+      if (!openShippedSession(ctx, sessionId)) return false
       let attempts = 0
       const open = () => {
         attempts += 1
@@ -1015,15 +1014,9 @@ window.__ModuleLoader__.load({
 
     /** Open one Session in the shipped Conversation panel. */
     function openNative(ctx, sessionId) {
-      const workspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
       const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
-      try {
-        if (workspace !== undefined && workspace !== null && typeof workspace.openSession === 'function') {
-          workspace.openSession(sessionId)
-        }
-      } catch (error) {
-        console.warn('[session-split] openSession failed:', error)
-      }
+      // ↗ means the shipped page, so this bypasses the openSession hook.
+      openShippedSession(ctx, sessionId)
       try {
         if (layout !== undefined && layout !== null && typeof layout.selectPanel === 'function') layout.selectPanel(null)
       } catch (error) {
@@ -1064,6 +1057,102 @@ window.__ModuleLoader__.load({
       } catch (error) {
         console.warn('[session-split] selectPanel failed:', error)
       }
+    }
+
+    /**
+     * Show a Session that already owns a pane, without leaving the workbench.
+     *
+     * One path behind every "open a Session that is already on screen" entry:
+     * a Session-row click, the Session menu, and the host service hook below.
+     * `false` means the workbench does not own that Session — or the user
+     * switched the behaviour off — so the caller keeps its own navigation
+     * instead of being silently swallowed.
+     */
+    function revealPane(ctx, sessionId) {
+      if (typeof sessionId !== 'string' || sessionId === '') return false
+      if (paneStore.followOpened !== true) return false
+      if (!paneStore.panes.includes(sessionId)) return false
+      const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
+      if (layout === undefined || layout === null || typeof layout.selectPanel !== 'function') return false
+      try {
+        layout.selectPanel(PANEL_ID)
+      } catch (error) {
+        // Without a panel to show there is nothing to keep the user on; the
+        // caller's own navigation is the better outcome.
+        console.warn('[session-split] showing the workbench failed:', error)
+        return false
+      }
+      setCurrentSession(sessionId)
+      flashPane(sessionId)
+      acknowledgeCompletion(ctx, sessionId)
+      return true
+    }
+
+    /** The host's own `uiWorkspace.openSession`, saved before it is hooked. */
+    let nativeOpenSession = null
+
+    /** Open one Session in the shipped Conversation page, ignoring the hook. */
+    function openShippedSession(ctx, sessionId) {
+      const workspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
+      try {
+        if (typeof nativeOpenSession === 'function') nativeOpenSession(sessionId)
+        else if (workspace !== undefined && workspace !== null && typeof workspace.openSession === 'function') workspace.openSession(sessionId)
+        return true
+      } catch (error) {
+        console.warn('[session-split] opening the Session failed:', error)
+        return false
+      }
+    }
+
+    /**
+     * Route every external "open this Session" call through the workbench.
+     *
+     * The workbench is a panel drawn over the Conversation column, so the
+     * host's own navigation would tear it down and take the user away from a
+     * Session that is already on screen in a pane. Hooking the single host
+     * method that opens a Session is what makes a notification — or any other
+     * entry — land on that pane; the workbench's own native jumps (the ↗ button
+     * and pane file links) go through `openShippedSession` so they still reach
+     * the real page. `revealPane` declines unless the Session really is a pane
+     * and the switch is on, in which case the original call runs unchanged.
+     */
+    function hookOpenSession(ctx) {
+      const install = (scope) => {
+        const workspace = typeof scope.get === 'function' ? scope.get('uiWorkspace') : undefined
+        if (workspace === undefined || workspace === null || typeof workspace.openSession !== 'function') return
+        const original = workspace.openSession
+        nativeOpenSession = original.bind(workspace)
+        const hooked = function openSession(sessionId) {
+          if (revealPane(ctx, sessionId)) return
+          return original.call(workspace, sessionId)
+        }
+        try {
+          workspace.openSession = hooked
+        } catch (error) {
+          nativeOpenSession = null
+          console.warn('[session-split] could not hook openSession:', error)
+          return
+        }
+        if (workspace.openSession !== hooked) {
+          // A frozen service object: leave the host alone instead of pretending
+          // the workbench owns every open.
+          nativeOpenSession = null
+          return
+        }
+        scope.effect(() => () => {
+          nativeOpenSession = null
+          try {
+            if (workspace.openSession === hooked) workspace.openSession = original
+          } catch {
+            // A frozen service object: the hook lives until the page reloads.
+          }
+        }, 'session-split: openSession hook')
+      }
+      // The shipped profiles compose ui-workspace before this panel, but a
+      // patched profile can mount it later; wait for the service instead of
+      // silently doing nothing.
+      if (typeof ctx.inject === 'function') ctx.inject(['uiWorkspace'], install)
+      else install(ctx)
     }
 
     // ---------------------------------------------------------------------
@@ -3084,33 +3173,24 @@ window.__ModuleLoader__.load({
           setCurrentSession(sessionId)
           const panes = paneStore.panes
           if (panes.length === 0) return
-          if (paneStore.followOpened && panes.includes(sessionId)) {
-            // Already on screen: keep the workbench and point at that pane.
-            // The "finished, unseen" dot is cleared by the status store while a
-            // Session is retained by the main view, so borrow that reference
-            // briefly instead of opening the native page (which would flash).
+          // Already on screen: keep the workbench and point at that pane. The
+          // "finished, unseen" dot is cleared by the status store while a
+          // Session is retained by the main view, so the reveal borrows that
+          // reference briefly instead of opening the native page (which would
+          // flash).
+          if (revealPane(ctx, sessionId)) {
             event.preventDefault()
             event.stopPropagation()
-            flashPane(sessionId)
-            acknowledgeCompletion(ctx, sessionId)
-            const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
-            try {
-              if (layout !== undefined && layout !== null && typeof layout.selectPanel === 'function') layout.selectPanel(PANEL_ID)
-            } catch { /* the pane is already visible */ }
             return
           }
           // Switching to another Session hands the column back: keep the
           // workbench alive as the floating bar instead of dropping it, and
           // open the Session explicitly — the native row click does not
           // navigate for a Session that is already on screen, and calling
-          // selectPanel(null) separately would race that navigation.
+          // selectPanel(null) separately would race that navigation. This is a
+          // deliberate jump to the shipped page, so it bypasses the hook.
           setMinimized(true)
-          const uiWorkspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
-          try {
-            if (uiWorkspace !== undefined && uiWorkspace !== null && typeof uiWorkspace.openSession === 'function') uiWorkspace.openSession(sessionId)
-          } catch (error) {
-            console.warn('[session-split] opening the Session failed:', error)
-          }
+          openShippedSession(ctx, sessionId)
         }
 
         window.addEventListener('dragstart', onDragStart, true)
@@ -3168,6 +3248,15 @@ window.__ModuleLoader__.load({
         useWorkbenchGestures(ctx)
 
         ctx.effect(() => rememberCurrentSession(ctx), 'session-split: remember current session')
+
+        // Any "open this Session" call that arrives from outside the workbench —
+        // a desktop notification, a command, another panel — stays in the
+        // workbench when the Session already owns a pane here. The toolbar
+        // switch still decides: off forwards the call untouched. This lives
+        // inside the workbench on purpose; no other plugin has to know about
+        // it, and the ones that open a Session keep calling the host service
+        // they already call.
+        hookOpenSession(ctx)
 
         // References live with the plugin, so they must die with it.
         ctx.effect(() => () => releaseAllSessions(), 'session-split: release sessions')

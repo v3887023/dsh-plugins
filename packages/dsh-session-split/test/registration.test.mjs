@@ -74,6 +74,9 @@ function boot(options = {}) {
       listeners.set(type, list.filter((item) => item !== handler))
     },
     innerWidth: 1600,
+    setTimeout: () => 0,
+    clearTimeout: () => {},
+    requestAnimationFrame: () => 0,
   }
   const document = {
     createElement,
@@ -84,8 +87,13 @@ function boot(options = {}) {
 
   const registrations = []
   const injections = []
+  const serviceInjections = []
   const layoutCalls = []
-  const opened = []
+  // The host's openSession, as the bundle found it: the workbench replaces it
+  // to keep an on-screen Session in the workbench.
+  const openedByHost = []
+  const uiWorkspace = { openSession: (id) => openedByHost.push(id) }
+  const rawOpenSession = uiWorkspace.openSession
   // The shell's structured menu service: the bundle contributes data actions
   // here instead of hand-rendering a menu row.
   const menuContributions = new Map()
@@ -101,6 +109,14 @@ function boot(options = {}) {
       effects.push(cleanup)
       return () => { if (typeof cleanup === 'function') cleanup() }
     },
+    // Services the workbench waits for before installing its hooks.
+    inject(names, callback) {
+      serviceInjections.push(names.join(','))
+      // The real context hands the callback a scope of its own; the stub has
+      // one flat context, so the same object stands in for it.
+      callback(ctx)
+      return () => {}
+    },
     get(name) {
       if (name === 'contextMenus') return contextMenus
       if (name === 'sessions') {
@@ -113,12 +129,12 @@ function boot(options = {}) {
               },
             }),
           },
-          retain: () => { throw new Error('retain is not exercised in this stub') },
+          retain: () => ({ release: () => {} }),
         }
       }
       if (name === 'locale') return { getSnapshot: () => ({ active: options.locale ?? 'zh-CN' }) }
       if (name === 'layout') return { selectPanel: (id) => layoutCalls.push(id) }
-      if (name === 'uiWorkspace') return { openSession: (id) => opened.push(id) }
+      if (name === 'uiWorkspace') return uiWorkspace
       return undefined
     },
     slots: {
@@ -147,7 +163,7 @@ function boot(options = {}) {
   const handlersOf = (type) => listeners.get(type) ?? []
   const slot = (name) => registrations.find((entry) => entry.name === name)
 
-  return { plugin, registrations, menuContributions, injections, layoutCalls, opened, writes, styled, effects, fire, handlersOf, slot, store, listeners }
+  return { plugin, registrations, menuContributions, injections, serviceInjections, layoutCalls, opened: openedByHost, workspace: uiWorkspace, rawOpenSession, writes, styled, effects, fire, handlersOf, slot, store, listeners }
 }
 
 // --- contributions -------------------------------------------------------
@@ -262,6 +278,32 @@ function boot(options = {}) {
   shell.fire('drop', { target: conversation, dataTransfer: transfer, preventDefault: () => { dropped = true }, stopPropagation: () => {} })
   assert.equal(dropped, false)
   assert.deepEqual(shell.layoutCalls, [])
+}
+
+// --- the openSession hook keeps an on-screen Session in the workbench -----
+{
+  const shell = boot()
+  const workspace = shell.workspace
+  shell.plugin.__internals.setPanes(['s1'])
+  shell.layoutCalls.length = 0
+
+  // What a desktop notification, a command, or another panel calls.
+  workspace.openSession('s1')
+  assert.deepEqual(shell.layoutCalls, ['session-split'], 'the workbench is shown')
+  assert.deepEqual(shell.opened, [], 'the native Conversation is not opened')
+
+  // A Session that is not a pane still opens natively.
+  workspace.openSession('s2')
+  assert.deepEqual(shell.opened, ['s2'])
+
+  // The switch decides: off hands the pane's Session back to the caller.
+  shell.plugin.__internals.setFollowOpened(false)
+  workspace.openSession('s1')
+  assert.deepEqual(shell.opened, ['s2', 's1'])
+
+  // Unload restores the host method instead of leaving the hook behind.
+  for (const cleanup of shell.effects) if (typeof cleanup === 'function') cleanup()
+  assert.equal(workspace.openSession, shell.rawOpenSession, 'the host openSession is restored')
 }
 
 // --- a restored pane list is honored ------------------------------------

@@ -71,9 +71,15 @@ view built from the retained event window.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that
   is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
-- **`Highlight opened` switch** (on by default): clicking a Session that is
+- **`Highlight opened` switch** (on by default): opening a Session that is
   already a pane keeps the workbench and flashes that pane instead of opening
-  the native page. With the switch off, that click opens the native page.
+  the native page — whether the request comes from a sidebar row, the Session
+  menu, a desktop notification, or any other caller of the host's one
+  "open this Session" method (`uiWorkspace.openSession`, which the workbench
+  hooks). No other plugin has to know about the workbench. The pane **↗** button
+  and pane file links deliberately bypass the hook, because those mean "go to the
+  native page". With the switch off, every entry opens the native page as it did
+  before.
 - **Focus acknowledges**: clicking into a pane (or focusing it) clears that
   Session's "finished, unseen" dot — the workbench borrows the same `mainView`
   reference the native open uses, so the status store drops the marker without
