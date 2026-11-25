@@ -1522,7 +1522,10 @@ window.__ModuleLoader__.load({
       '.ssp-empty{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center;color:var(--dsw-alias-label-tertiary)}',
       '.ssp-empty-title{font-size:14px;color:var(--dsw-alias-label-secondary)}',
       '.ssp-empty-hint{max-width:440px;line-height:20px;font-size:12.5px}',
-      '.ssp-grid{flex:1 1 auto;min-height:0;display:grid;gap:8px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 85%,#000);padding:8px;position:relative}',
+      // The gaps read as gaps, not as a hairline border: the panes sit on a
+      // board one theme step lighter than themselves, so the 8px gap is a
+      // visible band of its own instead of two borders touching.
+      '.ssp-grid{flex:1 1 auto;min-height:0;display:grid;gap:8px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 40%,var(--dsw-alias-bg-layer-1));padding:8px;position:relative}',
       '.ssp-gutter{position:absolute;top:0;bottom:0;width:11px;transform:translateX(-50%);cursor:col-resize;z-index:4;touch-action:none;border-radius:2px;background:transparent}',
       '.ssp-gutter:hover{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 38%,transparent)}',
       '.ssp-gutter:active{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 60%,transparent)}',
