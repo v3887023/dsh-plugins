@@ -14,7 +14,8 @@ has one switch per feature.
 2. **Reference by drag.** Drop a Session row on a conversation — its transcript
    or its input box — and the composer receives the same atomic
    `@[title](dsh-session:…)` chip the `@` menu inserts. Right-clicking a Session
-   and picking **引用到当前对话** does the same from the menu.
+   and picking **引用到当前会话** does the same from the menu — a structured
+   action the shell renders with its own icon, font, and hover surface.
 3. **Order lock.** With **Order by → Last updated** selected, dropping a Session
    back on the list is refused, so one drag can no longer silently replace the
    chosen order with a manual layout. **Order by → Manual** keeps the normal
@@ -31,8 +32,8 @@ edited and no page reload is needed.
 
 - **Group Sessions by date** — off leaves the flat list exactly as the shell
   renders it.
-- **Reference a Session by dragging it** — off removes the menu row and the drop
-  target; the order lock keeps working on its own.
+- **Reference a Session by dragging it** — off removes the menu action and the
+  drop target; the order lock keeps working on its own.
 - **Lock the "Last updated" order** — off restores ordinary drag reordering in
   every grouping.
 - **Add a Workspace by dropping a folder** — off leaves folder drops to the

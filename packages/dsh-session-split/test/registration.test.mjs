@@ -86,6 +86,15 @@ function boot(options = {}) {
   const injections = []
   const layoutCalls = []
   const opened = []
+  // The shell's structured menu service: the bundle contributes data actions
+  // here instead of hand-rendering a menu row.
+  const menuContributions = new Map()
+  const contextMenus = {
+    register(contribution) {
+      menuContributions.set(contribution.id, contribution)
+      return () => menuContributions.delete(contribution.id)
+    },
+  }
   const ctx = {
     effect(factory) {
       const cleanup = factory()
@@ -93,6 +102,7 @@ function boot(options = {}) {
       return () => { if (typeof cleanup === 'function') cleanup() }
     },
     get(name) {
+      if (name === 'contextMenus') return contextMenus
       if (name === 'sessions') {
         return {
           list: {
@@ -137,7 +147,7 @@ function boot(options = {}) {
   const handlersOf = (type) => listeners.get(type) ?? []
   const slot = (name) => registrations.find((entry) => entry.name === name)
 
-  return { plugin, registrations, injections, layoutCalls, opened, writes, styled, effects, fire, handlersOf, slot, store, listeners }
+  return { plugin, registrations, menuContributions, injections, layoutCalls, opened, writes, styled, effects, fire, handlersOf, slot, store, listeners }
 }
 
 // --- contributions -------------------------------------------------------
@@ -145,22 +155,22 @@ function boot(options = {}) {
   const shell = boot()
   const names = shell.registrations.map((entry) => entry.name).sort()
   assert.deepEqual(names, [
+    'contextMenu.icon',
     'conversation.session.header.utilities',
     'main',
     'shell.overlay',
     'shell.overlay',
     'shell.overlay',
     'sidebar.panellist',
-    'sidebar.workspaces.session.menu.item',
   ])
   assert.deepEqual(shell.injections.sort(), [
+    'contextMenu.icon',
     'conversation.session.header.utilities',
     'main',
     'shell.overlay',
     'shell.overlay',
     'shell.overlay',
     'sidebar.panellist',
-    'sidebar.workspaces.session.menu.item',
   ])
   const overlayIds = shell.registrations.filter((entry) => entry.name === 'shell.overlay').map((entry) => entry.id).sort()
   assert.deepEqual(overlayIds, ['session-split-bar', 'session-split-drop-hint', 'session-split-host'])
@@ -169,7 +179,11 @@ function boot(options = {}) {
   assert.equal(shell.slot('sidebar.panellist').id, 'session-split')
   assert.equal(typeof shell.slot('sidebar.panellist').label, 'function')
   assert.equal(shell.slot('sidebar.panellist').label(), '会话分屏')
-  assert.equal(shell.slot('sidebar.workspaces.session.menu.item').id, 'session-split-row')
+  assert.equal(shell.slot('contextMenu.icon').key, 'session-split.open', 'the glyph is keyed for the shell menu')
+  const contribution = shell.menuContributions.get('session-split.open')
+  assert.ok(contribution !== undefined, 'the structured menu action is registered')
+  assert.equal(contribution.target, 'session')
+  assert.equal(contribution.order, 400)
   assert.equal(shell.slot('shell.overlay').id, 'session-split-host')
 
   // Styles are installed once and removed on unload.
@@ -183,16 +197,11 @@ function boot(options = {}) {
 // --- Session-row menu entry ---------------------------------------------
 {
   const shell = boot()
-  const row = shell.slot('sidebar.workspaces.session.menu.item')
-  const closed = []
-  const tree = row.component({ sessionId: 's2', useMenuOpenState: () => [{ open: true }, (value) => closed.push(value)] })
-  assert.equal(tree.type, 'button')
-  assert.equal(tree.props.role, 'menuitem')
-  assert.equal(tree.children[0].props.className, 'ssp-menu-row-icon')
-  assert.equal(tree.children[1].children[0], '在分屏中打开')
-  tree.props.onClick()
-  assert.deepEqual(closed, [false], 'picking the row closes the menu')
-  assert.deepEqual(shell.layoutCalls, ['session-split'], 'picking the row shows the workbench')
+  const [action] = shell.menuContributions.get('session-split.open').resolve({ sessionId: 's2' })
+  assert.equal(action.label, '在分屏中打开')
+  assert.deepEqual(action.icon, { key: 'session-split.open' }, 'the shell renders the keyed glyph in its own menu font')
+  action.run()
+  assert.deepEqual(shell.layoutCalls, ['session-split'], 'picking the action shows the workbench')
   const persisted = JSON.parse(shell.writes.at(-1).value)
   assert.deepEqual(persisted.panes, ['s2'], 'the pane list is persisted')
 }

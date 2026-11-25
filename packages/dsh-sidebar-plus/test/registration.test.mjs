@@ -175,6 +175,16 @@ function boot(options = {}) {
     }),
   }
 
+  // The shell's structured menu service: the bundle contributes data actions
+  // here instead of hand-rendering a menu row.
+  const menuContributions = new Map()
+  const contextMenus = {
+    register(contribution) {
+      menuContributions.set(contribution.id, contribution)
+      return () => menuContributions.delete(contribution.id)
+    },
+  }
+
   const actions = {
     captureInsertion: () => {
       events.push('capture')
@@ -256,7 +266,10 @@ function boot(options = {}) {
 
   const ctx = {
     get(name) {
-      return name === 'locale' ? locale : name === 'sessions' ? sessions : undefined
+      if (name === 'locale') return locale
+      if (name === 'sessions') return sessions
+      if (name === 'contextMenus') return contextMenus
+      return undefined
     },
     effect(fn) {
       const cleanup = fn()
@@ -283,6 +296,7 @@ function boot(options = {}) {
   return {
     module,
     registrations,
+    menuContributions,
     listeners,
     bailCalls,
     textInserts,
@@ -304,18 +318,16 @@ function boot(options = {}) {
       runEffects()
       return card
     },
-    /** Render the sidebar row the menu would show for one Session. */
+    /**
+     * Resolve the structured menu action the shell would show for one Session.
+     * @returns the action wrapped like a rendered menu row, or `{ element: null }`.
+     */
     renderRow(sessionId, displayTitle = sessionId) {
-      const row = registrations.get('sidebar.workspaces.session.menu.item')
-      assert.ok(row !== undefined, 'the menu row is registered')
-      const dismissed = []
-      const element = row.component({
-        sessionId,
-        displayTitle,
-        useMenuOpenState: () => [true, (open) => dismissed.push(open)],
-        t: (key) => key,
-      })
-      return { element, dismissed }
+      const contribution = menuContributions.get('sidebar-plus.reference')
+      if (contribution === undefined) return { element: null }
+      const [action] = contribution.resolve({ sessionId, displayTitle })
+      if (action === undefined) return { element: null }
+      return { element: { type: 'menuitem', props: { children: action.label, onClick: action.run, icon: action.icon } } }
     },
     /** Dispatch one synthetic DOM event through the plugin's listeners. */
     dispatch(type, event) {
@@ -339,9 +351,12 @@ assert.deepEqual(shell.module.inject, ['slots', 'locale', 'sessions'])
 
 const seat = shell.registrations.get('conversation.input.overlay')
 assert.equal(seat.descriptor.id, 'sidebar-plus-seat')
-const row = shell.registrations.get('sidebar.workspaces.session.menu.item')
-assert.equal(row.descriptor.id, 'sidebar-plus-row')
-assert.equal(row.descriptor.locale, 'sidebarPlus')
+const icon = shell.registrations.get('contextMenu.icon')
+assert.equal(icon.descriptor.key, 'sidebar-plus.reference', 'the glyph is keyed for the shell menu')
+const contribution = shell.menuContributions.get('sidebar-plus.reference')
+assert.ok(contribution !== undefined, 'the structured menu action is registered')
+assert.equal(contribution.target, 'session')
+assert.equal(contribution.order, 350, 'between Fork and Copy Session ID')
 
 const mention = (label, id) => `@[${label}](dsh-session:${Buffer.from(JSON.stringify(id), 'utf8').toString('base64url')})`
 
@@ -353,14 +368,13 @@ assert.equal(shell.renderRow('a').element, null, 'the current conversation offer
 
 const offered = shell.renderRow('b', '会话 B')
 assert.notEqual(offered.element, null)
-assert.equal(offered.element.type, 'button', 'the primitive is optional, a plain menuitem works')
-assert.equal(offered.element.props.children, 'row.insert')
+assert.equal(offered.element.props.children, '引用到当前会话', 'the shell renders this label in its own menu font')
+assert.deepEqual(offered.element.props.icon, { key: 'sidebar-plus.reference' }, 'the shell renders the keyed glyph')
 
 // --- a pick lands as a chip, synchronously ---------------------------------
 
 events.length = 0
 offered.element.props.onClick()
-assert.deepEqual(offered.dismissed, [false], 'the menu dismisses before the insert')
 assert.deepEqual(events, ['capture', 'focus', 'capture', 'insert-chip'])
 assert.equal(shell.bailCalls.length, 1, 'one scoped insert dispatch')
 assert.equal(shell.bailCalls[0].name, 'slash/input-insert-reference')
@@ -403,7 +417,7 @@ assert.notEqual(pendingRow.element, null, 'a non-current row is offered')
 stale.options.byId = { a: { id: 'a', title: 'A', retainedBy: {} }, b: { id: 'b', title: 'B', retainedBy: { mainView: 1 } } }
 pendingRow.element.props.onClick()
 assert.equal(stale.bailCalls.length, 0, 'the pick re-resolves the target and refuses')
-assert.equal(notices.pop(), '不能引用当前对话本身')
+assert.equal(notices.pop(), '不能引用当前会话本身')
 
 // --- the Host limit is enforced before anything is inserted ----------------
 
@@ -415,7 +429,7 @@ full.mountSeat('a')
 full.renderRow('b').element.props.onClick()
 assert.equal(full.bailCalls.length, 0, 'a fourth reference is refused')
 assert.equal(full.textInserts.length, 0)
-assert.equal(notices.pop(), '一条消息最多引用 3 个对话')
+assert.equal(notices.pop(), '一条消息最多引用 3 个会话')
 
 // --- drag: a Session row dropped on a composer references it there ---------
 
@@ -503,7 +517,7 @@ const warn = console.warn
 console.warn = () => {}
 broken.renderRow('b').element.props.onClick()
 console.warn = warn
-assert.equal(notices.pop(), '没能把这个对话插入输入框', 'a throwing editor reports instead of failing silently')
+assert.equal(notices.pop(), '没能把这个会话插入输入框', 'a throwing editor reports instead of failing silently')
 
 // --- locked list: the reorder drop is refused, the reference still works ----
 

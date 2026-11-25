@@ -43,6 +43,8 @@ window.__ModuleLoader__.load({
 
     /** Panel identity shared by the sidebar entry and the main-slot occupant. */
     const PANEL_ID = 'session-split'
+    /** Keyed icon this bundle draws for its structured Session-menu action. */
+    const MENU_ICON_KEY = 'session-split.open'
     /** How many panes the workbench holds. */
     const MAX_PANES = 6
     /** How many transcript rows one fallback pane renders. */
@@ -175,6 +177,32 @@ window.__ModuleLoader__.load({
     const ctxRef = { current: null }
 
     /**
+     * Make one plain state object observable: a subscriber set plus one notify
+     * pass. Every store below keeps its fields directly readable
+     * (`paneStore.panes`, `dragStore.kind`), so components and handlers need no
+     * getter calls; only the subscription bookkeeping is shared.
+     */
+    function createStore(initial) {
+      const store = Object.assign({ listeners: new Set() }, initial)
+      store.notify = () => {
+        for (const listener of Array.from(store.listeners)) listener()
+      }
+      return store
+    }
+
+    /** Re-render the calling component once per notification. */
+    function useStore(store) {
+      const [, force] = useState(0)
+      useEffect(() => {
+        const listener = () => force((value) => value + 1)
+        store.listeners.add(listener)
+        return () => {
+          store.listeners.delete(listener)
+        }
+      }, [store])
+    }
+
+    /**
      * The render kit, published by the `main` seat.
      *
      * The visible workbench lives in `shell.overlay` so that switching panels
@@ -183,20 +211,13 @@ window.__ModuleLoader__.load({
      * caches them here (as plain data for the hooks) and the overlay consumes
      * them.
      */
-    const kitStore = { kit: null, listeners: new Set() }
+    const kitStore = createStore({ kit: null })
     function publishKit(kit) {
       kitStore.kit = kit
-      for (const listener of Array.from(kitStore.listeners)) listener()
+      kitStore.notify()
     }
     function useKit() {
-      const [, force] = useState(0)
-      useEffect(() => {
-        const listener = () => force((value) => value + 1)
-        kitStore.listeners.add(listener)
-        return () => {
-          kitStore.listeners.delete(listener)
-        }
-      }, [])
+      useStore(kitStore)
       return kitStore.kit
     }
 
@@ -746,7 +767,7 @@ window.__ModuleLoader__.load({
 
     /** Pane list, column override, widths, minimised state, and their subscribers. */
     const persistedState = readPersistedState()
-    const paneStore = {
+    const paneStore = createStore({
       panes: persistedState.panes,
       columns: persistedState.columns,
       widths: persistedState.widths,
@@ -759,8 +780,7 @@ window.__ModuleLoader__.load({
       // screen (file opening, right column) while the split view is visible.
       workbenchOpen: persistedState.workbenchOpen,
       flash: null,
-      listeners: new Set(),
-    }
+    })
 
     /** Write the workbench state to storage. */
     function persistState() {
@@ -780,11 +800,6 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** Notify every mounted workbench surface. */
-    function notifyPanes() {
-      for (const listener of Array.from(paneStore.listeners)) listener()
-    }
-
     /** Persist and publish the workbench state. */
     function commit(next) {
       paneStore.panes = normalizePanes(next.panes ?? paneStore.panes)
@@ -796,7 +811,7 @@ window.__ModuleLoader__.load({
       paneStore.compactComposer = next.compactComposer !== undefined ? next.compactComposer : paneStore.compactComposer
       paneStore.workbenchOpen = next.workbenchOpen !== undefined ? next.workbenchOpen : paneStore.workbenchOpen
       persistState()
-      notifyPanes()
+      paneStore.notify()
     }
 
     /** Replace the pane list. */
@@ -815,7 +830,7 @@ window.__ModuleLoader__.load({
       const grid = planGrid(paneStore.panes.length, paneStore.columns)
       paneStore.widths = normalizeWidths(widths, grid.columns)
       if (persist === true) persistState()
-      notifyPanes()
+      paneStore.notify()
     }
 
     /** Shrink the workbench into the floating bar (or bring it back). */
@@ -851,36 +866,29 @@ window.__ModuleLoader__.load({
         flashTimer = window.setTimeout(() => {
           flashTimer = null
           paneStore.flash = null
-          notifyPanes()
+          paneStore.notify()
         }, 1600)
       }
       // Clicking the same pane again must replay the cue: clear it, then set it
       // on the next frame so the CSS animation restarts.
       if (paneStore.flash === sessionId) {
         paneStore.flash = null
-        notifyPanes()
+        paneStore.notify()
         window.requestAnimationFrame(() => {
           paneStore.flash = sessionId
-          notifyPanes()
+          paneStore.notify()
           scheduleClear()
         })
         return
       }
       paneStore.flash = sessionId
-      notifyPanes()
+      paneStore.notify()
       scheduleClear()
     }
 
     /** Subscribe to the workbench state. */
     function usePanes() {
-      const [, force] = useState(0)
-      useEffect(() => {
-        const listener = () => force((value) => value + 1)
-        paneStore.listeners.add(listener)
-        return () => {
-          paneStore.listeners.delete(listener)
-        }
-      }, [])
+      useStore(paneStore)
       return {
         panes: paneStore.panes,
         columns: paneStore.columns,
@@ -895,7 +903,7 @@ window.__ModuleLoader__.load({
     }
 
     /** Drag state shared by the overlay hint and the drop handlers. */
-    const dragStore = {
+    const dragStore = createStore({
       kind: null,
       sessionId: null,
       overPane: null,
@@ -904,8 +912,7 @@ window.__ModuleLoader__.load({
       // Geometry captured at dragstart: the preview itself changes the layout,
       // so hit-testing against live rects would feed back and flicker.
       paneRects: null,
-      listeners: new Set(),
-    }
+    })
 
     /** Replace drag state, notifying only when a visible field changed. */
     function setDrag(patch) {
@@ -915,19 +922,12 @@ window.__ModuleLoader__.load({
         dragStore[key] = patch[key]
       }
       if (!changed) return
-      for (const listener of Array.from(dragStore.listeners)) listener()
+      dragStore.notify()
     }
 
     /** Subscribe to the drag state. */
     function useDragState() {
-      const [, force] = useState(0)
-      useEffect(() => {
-        const listener = () => force((value) => value + 1)
-        dragStore.listeners.add(listener)
-        return () => {
-          dragStore.listeners.delete(listener)
-        }
-      }, [])
+      useStore(dragStore)
       return dragStore
     }
 
@@ -935,14 +935,14 @@ window.__ModuleLoader__.load({
     let lastMainSessionId = undefined
 
     /** Subscribers told whenever that remembered Session changes. */
-    const currentStore = { listeners: new Set() }
+    const currentStore = createStore({})
 
     /** Record the Session the user is looking at, and wake the workbench. */
     function setCurrentSession(sessionId) {
       if (typeof sessionId !== 'string' || sessionId === '') return
       if (sessionId === lastMainSessionId) return
       lastMainSessionId = sessionId
-      for (const listener of Array.from(currentStore.listeners)) listener()
+      currentStore.notify()
     }
 
     /** The Session the main Conversation column currently shows, if any. */
@@ -979,14 +979,7 @@ window.__ModuleLoader__.load({
 
     /** The remembered Session, re-read whenever it changes. */
     function useCurrentSession(ctx) {
-      const [, force] = useState(0)
-      useEffect(() => {
-        const listener = () => force((value) => value + 1)
-        currentStore.listeners.add(listener)
-        return () => {
-          currentStore.listeners.delete(listener)
-        }
-      }, [])
+      useStore(currentStore)
       return resolveCurrentSession(ctx)
     }
 
@@ -1492,10 +1485,6 @@ window.__ModuleLoader__.load({
       '.ssp-error{flex:0 0 auto;padding:0 10px 8px;color:var(--dsw-alias-state-error-primary);font-size:11.5px;line-height:16px;word-break:break-word}',
       '.ssp-pane-state{flex:1 1 auto;display:flex;align-items:center;justify-content:center;color:var(--dsw-alias-label-tertiary);font-size:12px;padding:16px;text-align:center}',
       '.ssp-drop-hint{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--dsw-alias-bg-overlay,#22262e);color:var(--dsw-alias-label-primary);box-shadow:0 8px 26px rgba(0,0,0,.35);font-size:12.5px;pointer-events:none;border:1px solid var(--dsw-alias-border-l2)}',
-      '.ssp-menu-row{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;text-align:left;padding:6px 8px;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px;cursor:pointer;border-radius:6px}',
-      '.ssp-menu-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.ssp-menu-row-icon{display:inline-flex;flex:0 0 auto;color:var(--dsw-alias-label-tertiary)}',
-      '.ssp-menu-row-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     ].join('\n')
 
     // ---------------------------------------------------------------------
@@ -1588,28 +1577,6 @@ window.__ModuleLoader__.load({
       return h(Icon, null, [
         h('path', { key: 'a', d: 'M8 12.6V3.6', strokeWidth: 1.6, strokeLinecap: 'round' }),
         h('path', { key: 'b', d: 'M4.2 7.2 8 3.4l3.8 3.8', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }),
-      ])
-    }
-
-    /**
-     * Two-column split glyph for menu rows.
-     *
-     * Drawn on a 14-unit viewBox rendered at 14px (1:1, integer coordinates) so
-     * it stays crisp next to the host's sprite icons instead of blurring.
-     */
-    function SplitLineIcon() {
-      return h('svg', {
-        width: 14,
-        height: 14,
-        viewBox: '0 0 14 14',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeLinecap: 'round',
-        'aria-hidden': 'true',
-        focusable: 'false',
-      }, [
-        h('rect', { key: 'frame', x: 1, y: 1, width: 12, height: 12, rx: 2.5, strokeWidth: 1.3 }),
-        h('path', { key: 'divider', d: 'M7 1v12', strokeWidth: 1.3 }),
       ])
     }
 
@@ -2740,23 +2707,44 @@ window.__ModuleLoader__.load({
       return null
     }
 
-    /** Session-row menu row: "Open in split view". */
-    function SplitMenuRow(props) {
-      const ctx = ctxRef.current
-      const { sessionId } = props
-      const [, setMenuOpen] = props.useMenuOpenState()
-      return h('button', {
-        type: 'button',
-        role: 'menuitem',
-        className: 'ssp-menu-row',
-        onClick: () => {
-          setMenuOpen(false)
-          openWorkbench(ctx, sessionId)
-        },
+    /**
+     * The Session-menu glyph: the same two-column split as the sidebar panel,
+     * redrawn on the shell's 16px menu-icon grid so it matches the built-in
+     * outline icons in size and stroke.
+     */
+    function SplitMenuIcon() {
+      return h('svg', {
+        width: 16,
+        height: 16,
+        viewBox: '0 0 16 16',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 1.5,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        'aria-hidden': 'true',
+        focusable: 'false',
       }, [
-        h('span', { key: 'icon', className: 'ssp-menu-row-icon' }, h(SplitLineIcon)),
-        h('span', { key: 'label', className: 'ssp-menu-row-label' }, translate(ctx, 'menu.open')),
+        h('rect', { key: 'frame', x: 2, y: 2.5, width: 12, height: 11, rx: 2.5 }),
+        h('path', { key: 'divider', d: 'M8 2.5v11' }),
       ])
+    }
+
+    /**
+     * The structured Session-menu contribution. A data action, not a rendered
+     * row: the shell owns the font, icon sizing, hover surface, and keyboard
+     * handling, so "Open in split view" lines up with the Host's own entries.
+     * @param ctx - client root context.
+     * @param target - the captured Session row.
+     * @returns the one action this bundle contributes.
+     */
+    function splitMenuActions(ctx, target) {
+      return [{
+        id: 'open',
+        label: translate(ctx, 'menu.open'),
+        icon: { key: MENU_ICON_KEY },
+        run: () => { openWorkbench(ctx, target.sessionId) },
+      }]
     }
 
     // ---------------------------------------------------------------------
@@ -3225,11 +3213,23 @@ window.__ModuleLoader__.load({
           order: 999,
         }, CurrentSessionProbe))
 
-        ctx.slots.inject('sidebar.workspaces.session.menu.item', () => ctx.slots.register({
-          name: 'sidebar.workspaces.session.menu.item',
-          id: 'session-split-row',
-          order: 320,
-        }, SplitMenuRow))
+        // "Open in split view" is a structured Session-menu action, so the
+        // shell renders it with the same icon size, font, and hover surface as
+        // Pin and Rename; the keyed glyph is registered beside it. A Host
+        // without the menu service shows no entry instead of a foreign row.
+        const menus = typeof ctx.get === 'function' ? ctx.get('contextMenus') : undefined
+        if (menus !== undefined && menus !== null && typeof menus.register === 'function') {
+          ctx.slots.inject('contextMenu.icon', () => ctx.slots.register({
+            name: 'contextMenu.icon',
+            key: MENU_ICON_KEY,
+          }, SplitMenuIcon))
+          ctx.effect(() => menus.register({
+            id: 'session-split.open',
+            target: 'session',
+            order: 400,
+            resolve: (target) => splitMenuActions(ctx, target),
+          }), 'session-split: open-in-split menu action')
+        }
       },
       /** Pure helpers and components, exposed for the offline tests only. */
       __internals: {
@@ -3266,7 +3266,8 @@ window.__ModuleLoader__.load({
         MinimizeBar,
         PanelEntry,
         DropHint,
-        SplitMenuRow,
+        splitMenuActions,
+        SplitMenuIcon,
         PANEL_ID,
         MAX_PANES,
       },

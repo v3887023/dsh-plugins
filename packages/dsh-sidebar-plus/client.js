@@ -10,8 +10,8 @@
  *    Today, Yesterday, then one collapsible section per calendar day.
  * 2. **Reference by drag.** Dragging a Session row onto a conversation inserts
  *    the same atomic `@[label](dsh-session:…)` mention the composer's `@` menu
- *    inserts; a sidebar context-menu row offers the same reference. The chip
- *    still resolves through the Host's Session-reference service when sent.
+ *    inserts; a structured Session-menu action offers the same reference. The
+ *    chip still resolves through the Host's Session-reference service when sent.
  * 3. **Order lock.** With **Order by → Last updated** selected, dropping a
  *    Session back on the list is refused, so one drag can no longer silently
  *    replace the chosen order with a manual layout.
@@ -46,6 +46,8 @@ window.__ModuleLoader__.load({
     const PREFS_KEY = 'dsh.sidebar-plus.v1'
     /** Every switch defaults on. */
     const PREF_DEFAULTS = { dateGroups: true, sessionDrag: true, sortLock: true, folderDrop: true }
+    /** Keyed icon this bundle draws for its structured Session-menu action. */
+    const MENU_ICON_KEY = 'sidebar-plus.reference'
 
     // -------------------------------------------------------------------------
     // Feature switches
@@ -127,10 +129,10 @@ window.__ModuleLoader__.load({
       'day.otherYear': '{mon} {d}, {y}',
       'label.weekday': '{label} ({weekday})',
       groupAria: '{label}, {n} sessions',
-      'row.insert': 'Reference in current chat',
-      'toast.self': 'The current chat cannot reference itself',
-      'toast.limited': 'A message can reference at most {max} chats',
-      'toast.noComposer': 'The current chat has no composer ready',
+      'row.insert': 'Reference in current session',
+      'toast.self': 'The current session cannot reference itself',
+      'toast.limited': 'A message can reference at most {max} sessions',
+      'toast.noComposer': 'The current session has no composer ready',
       'toast.failed': 'Could not insert the reference into the composer',
       'toast.noPath': 'The folder path is unavailable',
       'toast.workspaceFailed': 'Could not add the workspace: {message}',
@@ -139,7 +141,7 @@ window.__ModuleLoader__.load({
       'settings.dateGroups': 'Group Sessions by date',
       'settings.dateGroups.desc': 'Pinned, Today, Yesterday, then one collapsible section per day.',
       'settings.sessionDrag': 'Reference a Session by dragging it',
-      'settings.sessionDrag.desc': 'Drop a Session on a conversation to reference it there; the sidebar menu offers the same.',
+      'settings.sessionDrag.desc': 'Drop a Session into the current session to reference it; the sidebar menu offers the same.',
       'settings.sortLock': 'Lock the “Last updated” order',
       'settings.sortLock.desc': 'While ordering by last activity, a Session drag cannot switch the list to manual order.',
       'settings.folderDrop': 'Add a Workspace by dropping a folder',
@@ -155,11 +157,11 @@ window.__ModuleLoader__.load({
       'day.otherYear': '{y}年{m}月{d}日',
       'label.weekday': '{label}（{weekday}）',
       groupAria: '{label}，共 {n} 个会话',
-      'row.insert': '引用到当前对话',
-      'toast.self': '不能引用当前对话本身',
-      'toast.limited': '一条消息最多引用 {max} 个对话',
-      'toast.noComposer': '当前对话的输入框还没准备好',
-      'toast.failed': '没能把这个对话插入输入框',
+      'row.insert': '引用到当前会话',
+      'toast.self': '不能引用当前会话本身',
+      'toast.limited': '一条消息最多引用 {max} 个会话',
+      'toast.noComposer': '当前会话的输入框还没准备好',
+      'toast.failed': '没能把这个会话插入输入框',
       'toast.noPath': '无法读取该文件夹的路径',
       'toast.workspaceFailed': '添加工作区失败：{message}',
       'settings.title': '侧边栏',
@@ -167,7 +169,7 @@ window.__ModuleLoader__.load({
       'settings.dateGroups': '会话按日期分组',
       'settings.dateGroups.desc': '置顶、今天、昨天，之后每天一个可折叠标题。',
       'settings.sessionDrag': '拖动会话即可引用',
-      'settings.sessionDrag.desc': '把会话拖到对话里就引用它；侧栏右键菜单里有同样的入口。',
+      'settings.sessionDrag.desc': '把会话拖到当前会话的输入框里就引用它；侧栏右键菜单里有同样的入口。',
       'settings.sortLock': '锁定「最近更新」排序',
       'settings.sortLock.desc': '按最近活动排序时，拖动会话不会把列表切成手动排序。',
       'settings.folderDrop': '拖入文件夹新建工作区',
@@ -1984,31 +1986,46 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * The sidebar Session-menu row. Offered only while the reference feature is
-     * on, when a composer is mounted, and never on the conversation that
-     * composer belongs to.
-     * @param props - row props: the Session, its title, and the menu's dismissal hook.
-     * @returns the menu row, or null when there is nothing to reference it into.
+     * The glyph the Session menu shows for the reference action. It is drawn on
+     * the shell's outline grid (16px, 1.5px stroke, `currentColor`) so the row
+     * reads like the Host's own menu icons instead of a plugin afterthought.
+     * @returns the icon element.
      */
-    function ReferenceMenuRow(props) {
-      const { sessionId, displayTitle, useMenuOpenState } = props
-      const [, setMenuOpen] = useMenuOpenState()
-      if (!readPrefs().sessionDrag) return null
-      if (seats.size === 0) return null
-      const current = currentSessionId(ctxRef.current)
-      if (current !== undefined && current === sessionId) return null
-      const t = typeof props.t === 'function' ? props.t : (key, params) => translate(ctxRef.current, key, params)
-      const label = t('row.insert')
-      const select = () => {
-        setMenuOpen(false)
-        insertReference(ctxRef.current, sessionId, displayTitle)
-      }
-      return h('button', {
-        type: 'button',
-        role: 'menuitem',
-        onClick: select,
-        style: { display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 0, background: 'transparent', color: 'inherit', font: 'inherit', cursor: 'pointer' },
-      }, label)
+    function ReferenceIcon() {
+      return h('svg', {
+        width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none',
+        stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round',
+        'aria-hidden': 'true',
+      }, [
+        h('path', { key: 'bar', d: 'M6.2 9.8 9.8 6.2' }),
+        h('path', { key: 'head', d: 'M7.1 4.6 8.3 3.4a2.5 2.5 0 0 1 3.5 3.5L10.7 8' }),
+        h('path', { key: 'tail', d: 'M8.9 11.4 7.7 12.6a2.5 2.5 0 0 1-3.5-3.5L5.3 8' }),
+      ])
+    }
+
+    /**
+     * The structured Session-menu contribution. A structured action, not a
+     * hand-rendered menu row: the shell draws the icon, font, hover surface,
+     * separators, and keyboard handling, so this entry cannot drift from
+     * **Pin**, **Rename**, and the rest of the menu.
+     *
+     * It is offered only while the reference feature is on, when a composer is
+     * mounted, and never on the conversation that composer belongs to.
+     * @param ctx - client root context.
+     * @param target - the captured Session row.
+     * @returns one action, or an empty list when nothing can take the reference.
+     */
+    function referenceActions(ctx, target) {
+      if (!readPrefs().sessionDrag) return []
+      if (seats.size === 0) return []
+      const current = currentSessionId(ctx)
+      if (current !== undefined && current === target.sessionId) return []
+      return [{
+        id: 'reference',
+        label: translate(ctx, 'row.insert'),
+        icon: { key: MENU_ICON_KEY },
+        run: () => { insertReference(ctx, target.sessionId, target.displayTitle) },
+      }]
     }
 
     /** One switch row. */
@@ -2138,12 +2155,24 @@ window.__ModuleLoader__.load({
           label: () => translate(ctx, 'settings.title'),
         }, PreferencesSection))
 
-        ctx.slots.inject('sidebar.workspaces.session.menu.item', () => ctx.slots.register({
-          name: 'sidebar.workspaces.session.menu.item',
-          id: 'sidebar-plus-row',
-          order: 300,
-          locale: NS,
-        }, ReferenceMenuRow))
+        // The Session menu entry is a structured contribution: the shell owns
+        // the row's icon size, font, hover surface, and keyboard handling, so
+        // this action cannot drift from Pin, Rename, and the built-in rows. The
+        // keyed glyph is registered beside it. A Host without the menu service
+        // shows no entry rather than a hand-rendered row that looks foreign.
+        const menus = typeof ctx.get === 'function' ? ctx.get('contextMenus') : undefined
+        if (menus !== undefined && menus !== null && typeof menus.register === 'function') {
+          ctx.slots.inject('contextMenu.icon', () => ctx.slots.register({
+            name: 'contextMenu.icon',
+            key: MENU_ICON_KEY,
+          }, ReferenceIcon))
+          ctx.effect(() => menus.register({
+            id: 'sidebar-plus.reference',
+            target: 'session',
+            order: 350,
+            resolve: (target) => referenceActions(ctx, target),
+          }), 'sidebar-plus: reference menu action')
+        }
       } catch (error) {
         let storage = null
         try {
