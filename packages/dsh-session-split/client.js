@@ -2994,6 +2994,10 @@ window.__ModuleLoader__.load({
           && target.closest('[role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"], [role="tooltip"]') !== null
         const onFocusOut = (event) => {
           if (pane.contains(event.relatedTarget)) return
+          // Pressing a portalled menu item can move focus to nothing at all
+          // (`relatedTarget === null`); the pointerdown below decides those,
+          // so a null focus target must not collapse the composer.
+          if (event.relatedTarget === null || event.relatedTarget === undefined) return
           if (inOverlay(event.relatedTarget)) return
           collapseIfEmpty()
         }
