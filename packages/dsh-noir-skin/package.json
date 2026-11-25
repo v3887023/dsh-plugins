@@ -1,6 +1,6 @@
 {
   "name": "@v3887023/dsh-noir-skin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Graphite + champagne theme layer for the DSH web client: re-points the alias token set through ctx.theme.overrideTokens, with three accents in Settings.",
