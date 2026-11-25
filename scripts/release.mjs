@@ -20,6 +20,9 @@ const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/
 
 const [, , dirName, newVersion, ...flags] = process.argv
 const dryRun = flags.includes('--dry-run')
+const syncAt = flags.indexOf('--sync-from')
+const syncFrom = syncAt >= 0 ? flags[syncAt + 1] : undefined
+if (syncAt >= 0 && syncFrom === undefined) fail('--sync-from needs a source package directory')
 
 function fail(message) {
   console.error('error: ' + message)
@@ -30,10 +33,37 @@ function git(args, options = {}) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: options.quiet ? 'pipe' : 'inherit', ...options }).trim()
 }
 
-if (!dirName || !newVersion) fail('usage: node scripts/release.mjs <package-dir> <version> [--dry-run]')
+if (!dirName || !newVersion) fail('usage: node scripts/release.mjs <package-dir> <version> [--sync-from <dir>] [--dry-run]')
 if (!SEMVER.test(newVersion)) fail(`"${newVersion}" is not an exact SemVer version`)
 
 const packageDir = path.join(ROOT, 'packages', dirName)
+
+// The published copy mirrors a package maintained in the workspace repository:
+// copy it over and re-scope its name before the checks below.
+if (syncFrom !== undefined) {
+  if (!fs.existsSync(path.join(syncFrom, 'package.json'))) fail(`no package at ${syncFrom}`)
+  if (dryRun) {
+    console.log(`would sync ${syncFrom} -> ${packageDir}`)
+  }
+  else {
+    fs.rmSync(packageDir, { recursive: true, force: true })
+    fs.cpSync(syncFrom, packageDir, {
+      recursive: true,
+      filter: (source) => !/[\\/](?:node_modules|\.git)(?:[\\/]|$)/.test(source),
+    })
+    const syncedPath = path.join(packageDir, 'package.json')
+    const synced = JSON.parse(fs.readFileSync(syncedPath, 'utf8'))
+    const previousName = synced.name
+    synced.name = `${SCOPE}/${dirName}`
+    fs.writeFileSync(syncedPath, JSON.stringify(synced, null, 2) + '\n')
+    const syncedPatch = path.join(packageDir, 'cordis.patch.yml')
+    if (fs.existsSync(syncedPatch)) {
+      fs.writeFileSync(syncedPatch, fs.readFileSync(syncedPatch, 'utf8').split(previousName).join(synced.name))
+    }
+    console.log(`synced ${syncFrom} -> ${packageDir} (${previousName} -> ${synced.name})`)
+  }
+}
+
 if (!fs.existsSync(packageDir)) fail(`no package directory ${packageDir}`)
 
 const pkgPath = path.join(packageDir, 'package.json')
