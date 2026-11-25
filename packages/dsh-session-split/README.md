@@ -137,7 +137,9 @@ view built from the retained event window.
   into the composer) opens the real composer automatically. The collapsed bar
   also hides the composer's usage/activity dock (rounds, steps, context).
   Exactly one composer is visible per pane — the fallback composer is suppressed
-  while the bar is collapsed, so the two can never stack.
+  while the bar is collapsed, so the two can never stack. **A blank (hero) pane is
+  exempt**: a pane whose only job is the first message keeps the shipped composer
+  open, so starting a conversation never costs an extra click.
 - **File links route through the native page.** The right column resolves a
   file from the *on-screen* Session, and a global panel is not one — so a click
   on a file link inside a pane reveals the native Conversation (which makes the

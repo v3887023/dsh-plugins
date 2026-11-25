@@ -2680,7 +2680,11 @@ window.__ModuleLoader__.load({
         && retained.status === 'ready'
         && retained.reference !== null && retained.reference !== undefined
       // Compact mode: a placeholder bar until the user clicks into the composer.
-      const collapsed = props.compact === true && phase === 'collapsed'
+      // A brand-new (hero) pane keeps the shipped composer: typing the first
+      // message is the one thing it exists for, and asking for a second click
+      // before the input appears would be pure friction.
+      const compactApplies = props.compact === true && contentPhase.phase !== 'hero'
+      const collapsed = compactApplies && phase === 'collapsed'
 
       // The shipped composer sits inside the body's own scroll area. If a host
       // layout ever pushes it outside the pane's box, the pane grows its own
@@ -2758,7 +2762,7 @@ window.__ModuleLoader__.load({
       // The toggle applies to every pane at once; each pane starts collapsed.
       useEffect(() => {
         setPhase('collapsed')
-      }, [props.compact === true])
+      }, [compactApplies])
 
       useEffect(() => () => {
         if (expandTimerRef.current !== null) window.clearTimeout(expandTimerRef.current)
@@ -2777,7 +2781,7 @@ window.__ModuleLoader__.load({
       // Quoting a message inserts content into the shipped composer; reveal the
       // real composer so the user can continue typing there.
       useEffect(() => {
-        if (props.compact !== true || phase !== 'collapsed') return undefined
+        if (!compactApplies || phase !== 'collapsed') return undefined
         const pane = paneRef.current
         if (pane === null || pane === undefined) return undefined
         const input = pane.querySelector('[data-composer-input]')
@@ -2794,7 +2798,7 @@ window.__ModuleLoader__.load({
         })
         observer.observe(input, { childList: true, subtree: true })
         return () => observer.disconnect()
-      }, [props.compact, phase, retained.status])
+      }, [compactApplies, phase, retained.status])
 
       const officialBody = canRenderOfficial
         ? h('div', { key: 'official', className: 'ssp-body' },
@@ -2825,7 +2829,7 @@ window.__ModuleLoader__.load({
         className: props.flash === true ? 'ssp-pane ssp-pane-flash' : 'ssp-pane',
         'data-ssp-pane': sessionId,
         'data-index': index,
-        'data-compact': props.compact === true ? '' : undefined,
+        'data-compact': compactApplies ? '' : undefined,
         'data-collapsed': collapsed ? '' : undefined,
         'data-dragging': props.dragging === true ? '' : undefined,
         'data-drop-target': props.dropTarget === true ? '' : undefined,
@@ -2883,7 +2887,7 @@ window.__ModuleLoader__.load({
           }, h(CloseIcon)),
         ]),
         body,
-        props.compact === true && phase !== 'open' && retained.status === 'ready'
+        compactApplies && phase !== 'open' && retained.status === 'ready'
           ? h('button', {
             key: 'compactbar',
             type: 'button',
