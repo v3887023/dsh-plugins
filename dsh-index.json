@@ -146,6 +146,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-date-groups",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795571851,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "09f26d931085b7d38b753e1946a7379cb7769d54",
+            "path": "packages/dsh-session-date-groups"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795535003,
           "source": {
