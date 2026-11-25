@@ -165,7 +165,7 @@ function createHarness() {
     queueMicrotask,
   })
   vm.runInContext(SOURCE, context)
-  assert.equal(loaded?.id, '@local/dsh-workspace-drop')
+  assert.equal(loaded?.id, '@v3887023/dsh-workspace-drop')
   const plugin = loaded.factory(() => {
     throw new Error('no runtime requires')
   })

@@ -21,7 +21,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-session-sort-lock',
+  id: '@v3887023/dsh-session-sort-lock',
   factory() {
     /** Prefix shared by every persisted generation of the sidebar viewing store. */
     const STORE_PREFIX = 'dsh.workspace.view.'

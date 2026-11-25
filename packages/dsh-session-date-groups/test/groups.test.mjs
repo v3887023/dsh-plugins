@@ -342,7 +342,7 @@ function createHarness({ sessions, storage = createStorage(), flat = true, local
   }
   vm.createContext(context)
   vm.runInContext(SOURCE, context)
-  assert.equal(loaded?.id, '@local/dsh-session-date-groups')
+  assert.equal(loaded?.id, '@v3887023/dsh-session-date-groups')
 
   const plugin = loaded.factory(() => {
     throw new Error('no runtime requires')

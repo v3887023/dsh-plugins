@@ -10,7 +10,7 @@
  * route and never handles the proxy key.
  */
 window.__ModuleLoader__.load({
-  id: '@local/dsh-litellm-usage',
+  id: '@v3887023/dsh-litellm-usage',
   factory(require) {
     const React = require('react')
     const h = React.createElement

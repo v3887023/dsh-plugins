@@ -18,7 +18,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-workspace-drop',
+  id: '@v3887023/dsh-workspace-drop',
   factory(require) {
     /** Locale namespace owned by this plugin. */
     const NS = 'workspaceDrop'
@@ -71,7 +71,7 @@ window.__ModuleLoader__.load({
     /** Document flag that hides the shell's page-wide drop mask. */
     const DRAGGING_ATTRIBUTE = 'data-dsh-workspace-dragging'
     /** Stylesheet identity used for the plugin's own <style> element. */
-    const STYLE_ID = '@local/dsh-workspace-drop/sidebar-drop.css'
+    const STYLE_ID = '@v3887023/dsh-workspace-drop/sidebar-drop.css'
 
     const CSS = [
       `[${DROP_ATTRIBUTE}]{outline:2px dashed var(--dsw-alias-state-business-primary,#4d6bfe);`,
@@ -317,7 +317,7 @@ window.__ModuleLoader__.load({
 
       ctx.effect(() => {
         const style = document.createElement('style')
-        style.dataset.plugin = '@local/dsh-workspace-drop'
+        style.dataset.plugin = '@v3887023/dsh-workspace-drop'
         style.dataset.pluginCss = STYLE_ID
         style.textContent = CSS
         document.head.append(style)

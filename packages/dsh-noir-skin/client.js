@@ -21,17 +21,17 @@
  * writes, and the shell's own light/dark preference still owns the palette.
  */
 window.__ModuleLoader__.load({
-  id: '@local/dsh-noir-skin',
+  id: '@v3887023/dsh-noir-skin',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
     const { useState, useEffect } = React;
 
     /** Layer identity: also the name `overrideTokens` keeps for this source. */
-    const LAYER = '@local/dsh-noir-skin';
+    const LAYER = '@v3887023/dsh-noir-skin';
 
     /** Right-sidebar tab identity: the type id, its kind, and the guide card. */
-    const TYPE_ID = '@local/dsh-noir-skin/panel';
+    const TYPE_ID = '@v3887023/dsh-noir-skin/panel';
     const KIND = 'noir-skin';
 
     const KEY_ENABLED = 'dsh.noir-skin.enabled';

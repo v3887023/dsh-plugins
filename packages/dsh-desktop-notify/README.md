@@ -1,6 +1,6 @@
 # Custom desktop notifications for finished turns and waiting requests
 
-`@local/dsh-desktop-notify` draws its own notification card in the bottom-right
+`@v3887023/dsh-desktop-notify` draws its own notification card in the bottom-right
 corner of the desktop — an always-on-top WPF window, not a Windows toast — and
 plays a short synthesized chime when a Session needs you back:
 

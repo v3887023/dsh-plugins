@@ -38,12 +38,12 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-session-date-groups',
+  id: '@v3887023/dsh-session-date-groups',
   factory() {
     /** Locale namespace this plugin's own dictionary is bound under. */
     const NS = 'session-date-groups'
     /** Marker/owning id of the stylesheet injected into the document head. */
-    const STYLE_ID = '@local/dsh-session-date-groups'
+    const STYLE_ID = '@v3887023/dsh-session-date-groups'
     /** Browser-record key holding the operator's expansion choices. */
     const STORAGE_KEY = 'dsh.session-date-groups.v1'
     /** Browser-record key holding the last diagnostics record (see `recordDiagnosis`). */

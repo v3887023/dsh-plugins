@@ -1,6 +1,6 @@
 # Reference a session in the current chat
 
-`@local/dsh-session-reference` adds one row, **引用到当前对话**, to a Session's
+`@v3887023/dsh-session-reference` adds one row, **引用到当前对话**, to a Session's
 sidebar context menu. Picking it inserts the same Session reference the
 composer's `@` menu inserts: an atomic chip in the current draft carrying the
 canonical `@[title](dsh-session:…)` mention.

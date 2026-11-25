@@ -1,6 +1,6 @@
 # Group the session list by date
 
-`@local/dsh-session-date-groups` turns the sidebar's **single-list** Session
+`@v3887023/dsh-session-date-groups` turns the sidebar's **single-list** Session
 view into dated sections: **Pinned**, **Today**, **Yesterday**, and then one
 section per calendar day for everything older (for example **11月18日（星期三）**).
 Every section header collapses its rows, and only Today (and Pinned) start open.

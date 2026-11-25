@@ -1,6 +1,6 @@
 # Keep the sidebar's “Last updated” order
 
-`@local/dsh-session-sort-lock` stops a Session drag from silently replacing the
+`@v3887023/dsh-session-sort-lock` stops a Session drag from silently replacing the
 sidebar's **Last updated** order with a manual one.
 
 ## Behavior

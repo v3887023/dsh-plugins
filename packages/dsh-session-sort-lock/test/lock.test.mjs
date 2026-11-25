@@ -94,7 +94,7 @@ function createHarness({ storage = createStorage() } = {}) {
 
   const context = vm.createContext({ window, Element: FakeElement, console })
   vm.runInContext(SOURCE, context)
-  assert.equal(loaded?.id, '@local/dsh-session-sort-lock')
+  assert.equal(loaded?.id, '@v3887023/dsh-session-sort-lock')
   const plugin = loaded.factory(() => {
     throw new Error('no runtime requires')
   })

@@ -30,7 +30,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-session-reference',
+  id: '@v3887023/dsh-session-reference',
   factory(require) {
     const React = require('react')
     const h = React.createElement
@@ -396,7 +396,7 @@ window.__ModuleLoader__.load({
     /** Attribute painted on the composer card while a Session drag hovers it. */
     const DROP_ATTRIBUTE = 'data-dsh-session-ref-drop'
     /** Stylesheet identity used for the drop highlight. */
-    const STYLE_ID = '@local/dsh-session-reference/composer-drop.css'
+    const STYLE_ID = '@v3887023/dsh-session-reference/composer-drop.css'
     /** Highlight for the composer card under a Session drag. */
     const DROP_CSS = `[${DROP_ATTRIBUTE}]{outline:2px dashed var(--dsw-alias-state-business-primary,#4d6bfe);outline-offset:-3px;border-radius:var(--dsw-radius-panel,12px)}`
     /** Inherited custom property the sidebar column declares on its root. */
@@ -523,7 +523,7 @@ window.__ModuleLoader__.load({
       ctx.effect(() => {
         if (typeof window === 'undefined' || typeof document === 'undefined') return undefined
         const style = document.createElement('style')
-        style.dataset.plugin = '@local/dsh-session-reference'
+        style.dataset.plugin = '@v3887023/dsh-session-reference'
         style.dataset.pluginCss = STYLE_ID
         style.textContent = DROP_CSS
         document.head.append(style)

@@ -10,7 +10,7 @@
  * JSON route and never handles the official API key.
  */
 window.__ModuleLoader__.load({
-  id: '@local/dsh-deepseek-balance',
+  id: '@v3887023/dsh-deepseek-balance',
   factory(require) {
     const React = require('react')
     const h = React.createElement

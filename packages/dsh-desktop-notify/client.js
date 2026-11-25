@@ -13,7 +13,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/dsh-desktop-notify',
+  id: '@v3887023/dsh-desktop-notify',
   factory() {
     /** Same-origin route owned by the Host half. */
     const ENDPOINT = '/desktop-notify/click'

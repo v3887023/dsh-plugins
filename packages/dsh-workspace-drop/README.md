@@ -1,6 +1,6 @@
 # Drag a folder onto the sidebar to add a Workspace
 
-`@local/dsh-workspace-drop` turns a folder dropped on the Harness sidebar into a
+`@v3887023/dsh-workspace-drop` turns a folder dropped on the Harness sidebar into a
 Workspace, and opens a new Session in it.
 
 ## Behavior
