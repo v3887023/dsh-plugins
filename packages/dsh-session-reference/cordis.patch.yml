@@ -1,6 +1,0 @@
-- insert:
-    # A unique row id: "session-reference" is already taken by the shipped
-    # @deepseek-ai/dsh-session-reference row, and a duplicate insert is dropped
-    # by the composition instead of failing loudly.
-    - id: session-ref-menu
-      name: '@v3887023/dsh-session-reference'

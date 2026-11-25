@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Reference a session in the current chat",
-    "description": "Adds a sidebar Session menu row that references another session in the current composer, exactly like the @ menu's session reference."
-  }
-}

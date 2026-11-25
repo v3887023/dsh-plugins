@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Lock the “Last updated” order",
-    "description": "While Sessions are ordered by “Last updated”, dragging one no longer switches the list to manual ordering."
-  }
-}

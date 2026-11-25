@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Datumsgruppen in der Sitzungsliste",
-    "description": "In der Einzellisten-Ansicht gruppiert die Seitenleiste Sitzungen unter Angeheftet, Heute, Gestern und je einem Titel pro Kalendertag; jeder Titel lässt sich einklappen, standardmäßig sind nur Heute und Angeheftet geöffnet."
-  }
-}

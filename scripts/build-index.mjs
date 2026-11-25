@@ -8,8 +8,9 @@
  * starts at its package.json version pinned to the current commit. Titles follow
  * the directory name and icons are picked up when the package ships an icon.svg.
  *
- * A retired package keeps its directory, tags, and git history but is left out of
- * the index, so Discover cannot offer two bundles that own the same feature.
+ * A retired plugin is deleted from `packages/`: its released tags and commits
+ * still carry the directory, so an old version stays installable, while the
+ * index — rebuilt from the directories that exist — can no longer offer it.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,22 +21,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PACKAGES = path.join(ROOT, 'packages')
 const INDEX_FILE = path.join(ROOT, 'dsh-index.json')
 const REPOSITORY = 'https://github.com/v3887023/dsh-plugins'
-
-/**
- * Packages replaced by another bundle in this repository.
- *
- * Their feature moved into `dsh-session-drag`; listing them again would let a
- * user install both halves and end up with a duplicated menu row and two drag
- * handlers over the same events. The directories stay so their released commits
- * and tags remain resolvable.
- */
-const RETIRED = new Set([
-  'dsh-session-date-groups',
-  'dsh-session-drag',
-  'dsh-session-reference',
-  'dsh-session-sort-lock',
-  'dsh-workspace-drop',
-])
 
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim()
 const now = Math.floor(Date.now() / 1000)
@@ -53,7 +38,6 @@ const descriptions = {
 
 const plugins = fs.readdirSync(PACKAGES)
   .filter((name) => fs.statSync(path.join(PACKAGES, name)).isDirectory())
-  .filter((name) => !RETIRED.has(name))
   .sort()
   .map((dir) => {
     const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGES, dir, 'package.json'), 'utf8'))

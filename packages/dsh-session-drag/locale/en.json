@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Session drag: reference and order lock",
-    "description": "Drag a Session onto a conversation to reference it there; on a “Last updated” list, dropping it back on the sidebar no longer switches the order to manual."
-  }
-}
