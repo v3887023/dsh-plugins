@@ -2513,7 +2513,19 @@ window.__ModuleLoader__.load({
       // Session row too, so the pane's own status dot follows the same rule.
       const childRunning = subagents.some((child) => child.running)
       const busy = running || childRunning
-      const unread = props.unread === true && !busy
+      // The shipped status store only marks a finished Turn unseen when the
+      // Session is not held by the main view. A Session that was ever opened on
+      // the Conversation page keeps that hold, so in a pane it would never light
+      // up. Track the pane's own running edge instead, and let the shipped flag
+      // add to it.
+      const [finishedHere, setFinishedHere] = useState(false)
+      const wasBusyRef = useRef(busy)
+      useEffect(() => {
+        const was = wasBusyRef.current
+        wasBusyRef.current = busy
+        if (was && !busy) setFinishedHere(true)
+      }, [busy])
+      const unread = (props.unread === true || finishedHere) && !busy
 
       // Make sure the list has loaded this Session's subagent projection.
       useEffect(() => {
@@ -2794,8 +2806,8 @@ window.__ModuleLoader__.load({
         ref: paneRef,
         // Looking at a pane is enough to acknowledge its "finished, unseen" dot
         // and to remember which Session the user is reading.
-        onFocusCapture: () => focusPane(ctx, sessionId),
-        onPointerDownCapture: () => focusPane(ctx, sessionId),
+        onFocusCapture: () => { setFinishedHere(false); focusPane(ctx, sessionId) },
+        onPointerDownCapture: () => { setFinishedHere(false); focusPane(ctx, sessionId) },
         style: typeof props.span === 'number' && props.span > 1 ? { gridColumn: `span ${props.span}` } : undefined,
       }, [
         h('header', {
