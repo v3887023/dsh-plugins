@@ -169,68 +169,26 @@
       "icon": "packages/dsh-session-date-groups/icon.svg"
     },
     {
-      "name": "@v3887023/dsh-session-reference",
-      "title": "dsh-session-reference",
+      "name": "@v3887023/dsh-session-drag",
+      "title": "dsh-session-drag",
       "description": {
-        "en": "Reference a Session into the current conversation.",
-        "zh": "把某个会话引用到当前对话。"
+        "en": "Drag a Session to reference it; keep the “Last updated” order.",
+        "zh": "拖动会话即可引用它；锁定「最近更新」排序。"
       },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-reference",
+      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-drag",
       "versions": [
         {
-          "version": "1.0.1",
-          "publishTimestamp": 1795571870,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "6a9d9d799cc9069dea589f319f6a84ca435f1b2e",
-            "path": "packages/dsh-session-reference"
-          }
-        },
-        {
           "version": "1.0.0",
-          "publishTimestamp": 1795535003,
+          "publishTimestamp": 1795573769,
           "source": {
             "type": "git",
             "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "30bbc1e54a39f07622496251463246acb68f5c64",
-            "path": "packages/dsh-session-reference"
+            "commit": "ef21eacf73dfc1996d919a05848e8bc7b1aa6965",
+            "path": "packages/dsh-session-drag"
           }
         }
       ],
-      "icon": "packages/dsh-session-reference/icon.svg"
-    },
-    {
-      "name": "@v3887023/dsh-session-sort-lock",
-      "title": "dsh-session-sort-lock",
-      "description": {
-        "en": "Keep the sidebar order stable.",
-        "zh": "固定侧栏会话顺序。"
-      },
-      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-sort-lock",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "publishTimestamp": 1795571889,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "004117522a733f348dcf1179182d2cbf685db67e",
-            "path": "packages/dsh-session-sort-lock"
-          }
-        },
-        {
-          "version": "1.0.0",
-          "publishTimestamp": 1795535003,
-          "source": {
-            "type": "git",
-            "url": "https://github.com/v3887023/dsh-plugins",
-            "commit": "30bbc1e54a39f07622496251463246acb68f5c64",
-            "path": "packages/dsh-session-sort-lock"
-          }
-        }
-      ],
-      "icon": "packages/dsh-session-sort-lock/icon.svg"
+      "icon": "packages/dsh-session-drag/icon.svg"
     },
     {
       "name": "@v3887023/dsh-session-split",
