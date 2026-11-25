@@ -30,7 +30,10 @@ function fail(message) {
 }
 
 function git(args, options = {}) {
-  return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: options.quiet ? 'pipe' : 'inherit', ...options }).trim()
+  // With stdio: 'inherit' there is no captured output, and execFileSync returns
+  // null for it, so only a piped call can carry a value to trim.
+  const output = execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: options.quiet ? 'pipe' : 'inherit', ...options })
+  return output === null ? '' : output.trim()
 }
 
 if (!dirName || !newVersion) fail('usage: node scripts/release.mjs <package-dir> <version> [--sync-from <dir>] [--dry-run]')
