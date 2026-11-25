@@ -210,6 +210,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-session-sort-lock",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795571889,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "004117522a733f348dcf1179182d2cbf685db67e",
+            "path": "packages/dsh-session-sort-lock"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795535003,
           "source": {
