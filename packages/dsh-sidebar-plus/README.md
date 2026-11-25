@@ -97,6 +97,9 @@ existing set of collapsed days survives the move.
   refused with a notice.
 - **The lock is not a permission gate.** Row-level access still decides whether
   a drag starts at all; the lock only refuses the reorder drop.
+- **Debug tracing.** Set `localStorage['dsh.sidebar-plus.debug'] = 1` to log the
+  folder-drag zone changes and drops; the older `dsh.workspace-drop.debug` key is
+  no longer read.
 
 ## Implementation notes
 

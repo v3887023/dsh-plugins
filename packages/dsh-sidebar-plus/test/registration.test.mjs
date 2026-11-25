@@ -283,6 +283,7 @@ function boot(options = {}) {
   return {
     module,
     registrations,
+    listeners,
     bailCalls,
     textInserts,
     cleanups,
@@ -549,6 +550,9 @@ const prefsBoot = boot({ byId: { a: { id: 'a', title: 'A', retainedBy: { mainVie
 const section = prefsBoot.registrations.get('settings.section')
 assert.ok(section !== undefined, 'the Settings section is registered')
 assert.equal(section.descriptor.id, 'sidebar-plus')
+assert.equal(typeof section.descriptor.label, 'function', 'the nav label is a thunk the shell re-reads per projection')
+assert.equal(section.descriptor.label(), '侧边栏')
+assert.equal((prefsBoot.listeners.get('storage') ?? []).length, 1, 'cross-tab preference sync is installed')
 const rowsOf = (element) => element.props.children.filter(
   (child) => child !== null && child !== undefined && child.props !== undefined && child.props.className === 'dsh-sbp-row',
 )

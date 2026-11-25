@@ -1051,6 +1051,7 @@ window.__ModuleLoader__.load({
         const sync = () => {
           if (disposed) return
           if (!readPrefs().dateGroups) {
+            diagnose('disabled', () => pageFacts(container))
             if (container !== null) clear()
             signature = ''
             return
@@ -1230,11 +1231,20 @@ window.__ModuleLoader__.load({
         style.textContent = GROUPS_CSS
         doc.head.append(style)
 
+        // A switch flip is a page-local preference change, so the next pass runs
+        // now instead of waiting for the sweep: turning grouping off must remove
+        // the headers while the operator is looking at them.
+        const offPrefs = subscribePrefs(() => {
+          signature = ''
+          schedule()
+        })
+
         sync()
         timer = window.setInterval(sync, SWEEP_MS)
 
         return () => {
           disposed = true
+          offPrefs()
           window.clearInterval(timer)
           timer = 0
           if (frame !== 0 && typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(frame)
@@ -1934,33 +1944,6 @@ window.__ModuleLoader__.load({
     // Slot components
     // -------------------------------------------------------------------------
 
-    /** A small chat glyph for the menu row. */
-    function SessionGlyph() {
-      return h('svg', {
-        width: 16,
-        height: 16,
-        viewBox: '0 0 16 16',
-        'aria-hidden': 'true',
-        focusable: 'false',
-      }, [
-        h('path', {
-          key: 'body',
-          d: 'M2.5 4.3A1.8 1.8 0 0 1 4.3 2.5h7.4a1.8 1.8 0 0 1 1.8 1.8v4.9a1.8 1.8 0 0 1-1.8 1.8H7.2l-2.6 2.2a.55.55 0 0 1-.9-.42V11H4.3a1.8 1.8 0 0 1-1.8-1.8V4.3Z',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 1.3,
-          strokeLinejoin: 'round',
-        }),
-        h('path', {
-          key: 'lines',
-          d: 'M5.3 6.2h5.4M5.3 8.4h3.4',
-          stroke: 'currentColor',
-          strokeWidth: 1.3,
-          strokeLinecap: 'round',
-        }),
-      ])
-    }
-
     /**
      * Inert seat: records the mounted composer's action face, the draft
      * projection the reference limit is checked against, and one anchor node
@@ -2100,6 +2083,26 @@ window.__ModuleLoader__.load({
 
         ctx.effect(() => ctx.locale.register(NS, DICTIONARIES), 'sidebar-plus: dictionaries')
 
+        // Another tab's switch change reaches this page through `storage`; the
+        // cache is dropped so the next event path reads the new value, and the
+        // page-local listeners re-run so the Settings page and date groups agree.
+        ctx.effect(() => {
+          if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return undefined
+          const onStorage = (event) => {
+            if (event !== null && event !== undefined && typeof event.key === 'string' && event.key !== PREFS_KEY) return
+            prefsCache = null
+            for (const listener of [...prefsListeners]) {
+              try {
+                listener()
+              } catch (error) {
+                console.warn('[sidebar-plus] preference listener failed:', error)
+              }
+            }
+          }
+          window.addEventListener('storage', onStorage)
+          return () => window.removeEventListener('storage', onStorage)
+        }, 'sidebar-plus: cross-tab preferences')
+
         ctx.effect(() => () => {
           seats.clear()
           hideToast()
@@ -2130,7 +2133,9 @@ window.__ModuleLoader__.load({
           name: 'settings.section',
           id: 'sidebar-plus',
           order: 200,
-          label: translate(ctx, 'settings.title'),
+          // A thunk, not a string: the shell re-reads it on every projection, so
+          // switching the UI language renames the nav entry without a reload.
+          label: () => translate(ctx, 'settings.title'),
         }, PreferencesSection))
 
         ctx.slots.inject('sidebar.workspaces.session.menu.item', () => ctx.slots.register({

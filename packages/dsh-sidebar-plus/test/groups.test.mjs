@@ -401,6 +401,7 @@ function createHarness({ sessions, storage = createStorage(), flat = true, local
     container,
     rows,
     storage,
+    plugin,
     frames,
     observers,
     /** Run pending frame callbacks (the observer's coalesced pass). */
@@ -853,6 +854,25 @@ const history = [
   assert.equal(harness.container.children[0], headers[0], 'the header returns above the section')
   const afterHeader = harness.container.children[harness.container.children.indexOf(headers[0]) + 1]
   assert.equal(afterHeader, secondSlot, 'today header must sit above the section’s new first row')
+  harness.dispose()
+}
+
+// The dateGroups switch removes and restores the decoration without a reload.
+{
+  const harness = createHarness({ sessions: history })
+  assert.ok(harness.headers().length > 1, 'the list is grouped by default')
+  const before = harness.visible().length
+  assert.ok(before < history.length, 'collapsed sections hide rows by default')
+
+  harness.plugin.__internals.updatePrefs({ dateGroups: false })
+  harness.flush()
+  assert.equal(harness.headers().length, 0, 'turning the switch off removes every header at once')
+  assert.equal(harness.visible().length, history.length, 'and every row is visible again')
+
+  harness.plugin.__internals.updatePrefs({ dateGroups: true })
+  harness.flush()
+  assert.ok(harness.headers().length > 1, 'turning it back on restores the sections')
+  assert.equal(harness.visible().length, before, 'with the collapse choices it had before')
   harness.dispose()
 }
 
