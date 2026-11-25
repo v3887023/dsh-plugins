@@ -179,13 +179,14 @@
       "versions": [
         {
           "version": "1.0.0",
-          "publishTimestamp": 1795574493,
+          "publishTimestamp": 1795574793,
           "source": {
             "type": "git",
             "url": "https://github.com/v3887023/dsh-plugins",
             "commit": "60e008f1a0ca2ef1b6f8729221e2fe6338aa2885",
             "path": "packages/dsh-sidebar-plus"
-          }
+          },
+          "commit": "75fc2d57d9965a2b43cf2a8ee8f0cf79795ea4ed"
         }
       ],
       "icon": "packages/dsh-sidebar-plus/icon.svg"
