@@ -88,6 +88,8 @@ window.__ModuleLoader__.load({
       'pane.outlineEmpty': '还没有用户消息',
       'pane.outlineJump': '跳到这条消息',
       'pane.outlineNoText': '（这条消息没有文本）',
+      'pane.outlineTurn': '第 {turn} 轮',
+      'pane.outlineTotal': '共 {count} 轮（含未加载），点未加载的轮次会先加载更早历史',
       'pane.openSubagent': '在分屏中打开这个子 Agent',
       'pane.moreSubagents': '更多子 Agent',
       'pane.subagentCount': '{count} 个子 Agent',
@@ -150,6 +152,8 @@ window.__ModuleLoader__.load({
       'pane.outlineEmpty': 'No user messages yet',
       'pane.outlineJump': 'Jump to this message',
       'pane.outlineNoText': '(this message has no text)',
+      'pane.outlineTurn': 'Turn {turn}',
+      'pane.outlineTotal': '{count} turns — picking an unloaded one loads older history first',
       'pane.openSubagent': 'Open this subagent in a pane',
       'pane.moreSubagents': 'More subagents',
       'pane.subagentCount': '{count} subagents',
@@ -1592,6 +1596,8 @@ window.__ModuleLoader__.load({
       '.ssp-outline-index{flex:0 0 auto;min-width:18px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
       '.ssp-outline-empty{padding:10px 8px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
       '.ssp-outline-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.ssp-outline-item[data-unloaded] .ssp-outline-text{color:var(--dsw-alias-label-secondary)}',
+      '.ssp-outline-total{position:sticky;bottom:0;margin-top:2px;padding:5px 8px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay,#22262e);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}',
       '.ssp-picker{position:fixed;z-index:2147483001;width:330px;max-height:460px;display:flex;flex-direction:column;border-radius:10px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 12px 32px rgba(0,0,0,.42);overflow:hidden}',
       '.ssp-picker-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--dsw-alias-border-l1)}',
       '.ssp-picker-search{flex:1 1 auto;min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-specific-input-major);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;padding:5px 8px;outline:none}',
@@ -1982,15 +1988,19 @@ window.__ModuleLoader__.load({
     /**
      * User-message outline for one pane.
      *
-     * The shipped conversation renders (and virtualises) its own message list,
-     * so the outline reads the user rows that are on screen and jumps by
-     * scrolling the pane's own scrollport. Nothing about the chat flow is
-     * re-implemented, and an older message that is not rendered yet simply is
-     * not listed — the same bound the pane itself has.
+     * The source of truth is the `turnOutline` Session projection — the same
+     * whole-log outline the shipped turn rail uses — so every Turn of the
+     * conversation is listed, including Turns whose events are not loaded yet.
+     * A loaded Turn is jumped to by scrolling the pane's own scrollport; an
+     * unloaded one pages the pane's history through `loadOlder()` until its
+     * Turn row exists, then scrolls. Without that projection (a subagent pane,
+     * or an assembly without it) the outline falls back to the user rows on
+     * screen, which is exactly what the pane itself can show.
      */
     function PaneOutline(props) {
-      const { paneRef, t } = props
+      const { ctx, sessionId, paneRef, t } = props
       const [menu, setMenu] = useState(null)
+      const [busy, setBusy] = useState(false)
       const buttonRef = useRef(null)
 
       useEffect(() => {
@@ -2011,16 +2021,57 @@ window.__ModuleLoader__.load({
         return shipped.length > 0 ? shipped : [...pane.querySelectorAll('.ssp-row-user')]
       }
 
+      /** The Session binding behind this pane, when the service still holds it. */
+      const bindingOf = () => {
+        try {
+          const sessions = ctx !== null && ctx !== undefined && typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
+          if (sessions === undefined || sessions === null || typeof sessions.binding !== 'function') return undefined
+          return sessions.binding(sessionId) ?? undefined
+        } catch {
+          return undefined
+        }
+      }
+
+      /** Whole-log turn outline for this Session, or null when it is unavailable. */
+      const turnOutlineOf = () => {
+        try {
+          const binding = bindingOf()
+          const face = binding !== undefined && binding.session !== undefined && binding.session !== null
+            ? binding.session.projections
+            : undefined
+          const value = face !== undefined && face !== null && typeof face.faceOf === 'function'
+            ? face.faceOf('turnOutline').getSnapshot()
+            : undefined
+          return Array.isArray(value) ? value : null
+        } catch {
+          return null
+        }
+      }
+
       const openMenu = () => {
         const node = buttonRef.current
         if (node === null || node === undefined) return
         const pane = paneRef.current
-        const items = pane === null || pane === undefined
-          ? []
-          : userRows(pane).map((row, index) => ({
+        const outline = pane !== null && pane !== undefined ? turnOutlineOf() : null
+        const items = outline !== null
+          ? outline.map((entry) => {
+            const turn = entry !== null && entry !== undefined && typeof entry.turn === 'number' ? entry.turn : null
+            const prompt = entry !== null && entry !== undefined && typeof entry.prompt === 'string' ? entry.prompt : ''
+            return {
+              key: `turn-${String(turn)}`,
+              turn,
+              index: null,
+              loaded: turn !== null && pane.querySelector(`[data-chat-turn="${String(turn)}"]`) !== null,
+              label: prompt !== '' ? prompt : (turn === null ? '' : t('pane.outlineTurn', { turn: turn + 1 })),
+            }
+          })
+          : (pane === null || pane === undefined ? [] : userRows(pane).map((row, index) => ({
+            key: `row-${String(index)}`,
+            turn: null,
             index,
-            text: String(row.innerText ?? '').replace(/\s+/g, ' ').trim(),
-          }))
+            loaded: true,
+            label: String(row.innerText ?? '').replace(/\s+/g, ' ').trim(),
+          })))
         const rect = node.getBoundingClientRect()
         const width = 320
         const height = 340
@@ -2030,14 +2081,12 @@ window.__ModuleLoader__.load({
             ? Math.max(8, rect.top - height - 4)
             : rect.bottom + 4,
           items,
+          wholeLog: outline !== null,
         })
       }
 
-      const jump = (index) => {
-        setMenu(null)
-        const pane = paneRef.current
-        if (pane === null || pane === undefined) return
-        const row = userRows(pane)[index]
+      /** Centre one row inside the pane's own scrollport. */
+      const scrollToRow = (pane, row) => {
         if (row === undefined || row === null) return
         const scroller = pane.querySelector('[data-conversation-scroll]')
           ?? pane.querySelector('.ssp-transcript')
@@ -2052,6 +2101,50 @@ window.__ModuleLoader__.load({
         }
       }
 
+      const jump = async (item) => {
+        setMenu(null)
+        const pane = paneRef.current
+        if (pane === null || pane === undefined) return
+        if (item.turn === null) {
+          scrollToRow(pane, userRows(pane)[item.index])
+          return
+        }
+        const turnRowOf = () => {
+          const current = paneRef.current
+          return current === null || current === undefined
+            ? null
+            : current.querySelector(`[data-chat-turn="${String(item.turn)}"]`)
+        }
+        const loaded = turnRowOf()
+        if (loaded !== null) {
+          scrollToRow(pane, loaded)
+          return
+        }
+        // Not in the loaded window yet: page history in until its Turn row
+        // exists. Each page moves the window by at least two Turns, so this
+        // bound reaches roughly sixty Turns back; beyond that the pane's own
+        // history is a better place to look than sixty page loads.
+        const binding = bindingOf()
+        const session = binding !== undefined && binding.session !== undefined ? binding.session : undefined
+        if (session === undefined || session === null || typeof session.loadOlder !== 'function') return
+        setBusy(true)
+        try {
+          for (let attempt = 0; attempt < 30; attempt += 1) {
+            await session.loadOlder()
+            const found = turnRowOf()
+            if (found !== null) {
+              const current = paneRef.current
+              if (current !== null && current !== undefined) scrollToRow(current, found)
+              return
+            }
+          }
+        } catch (error) {
+          console.warn('[session-split] loading older history failed:', error)
+        } finally {
+          setBusy(false)
+        }
+      }
+
       return [
         h('button', {
           key: 'outline',
@@ -2060,7 +2153,7 @@ window.__ModuleLoader__.load({
           className: 'ssp-icon-btn',
           title: t('pane.outline'),
           'aria-label': t('pane.outline'),
-          'data-active': menu !== null ? '' : undefined,
+          'data-active': menu !== null || busy ? '' : undefined,
           draggable: true,
           onClick: () => (menu === null ? openMenu() : setMenu(null)),
         }, h(OutlineIcon)),
@@ -2070,16 +2163,22 @@ window.__ModuleLoader__.load({
           style: { left: `${menu.left}px`, top: `${menu.top}px` },
         }, menu.items.length === 0
           ? h('div', { key: 'empty', className: 'ssp-outline-empty' }, t('pane.outlineEmpty'))
-          : menu.items.map((item) => h('button', {
-            key: `outline-${item.index}`,
-            type: 'button',
-            className: 'ssp-menu-item ssp-outline-item',
-            title: t('pane.outlineJump'),
-            onClick: () => jump(item.index),
-          }, [
-            h('span', { key: 'n', className: 'ssp-outline-index' }, String(item.index + 1)),
-            h('span', { key: 't', className: 'ssp-outline-text' }, item.text === '' ? t('pane.outlineNoText') : item.text),
-          ]))) : null,
+          : [
+            ...menu.items.map((item) => h('button', {
+              key: `outline-${item.key}`,
+              type: 'button',
+              className: 'ssp-menu-item ssp-outline-item',
+              'data-unloaded': item.loaded ? undefined : '',
+              title: t('pane.outlineJump'),
+              onClick: () => { void jump(item) },
+            }, [
+              h('span', { key: 'n', className: 'ssp-outline-index' }, String((item.turn === null ? item.index : item.turn) + 1)),
+              h('span', { key: 't', className: 'ssp-outline-text' }, item.label === '' ? t('pane.outlineNoText') : item.label),
+            ])),
+            menu.wholeLog
+              ? h('div', { key: 'total', className: 'ssp-outline-total' }, t('pane.outlineTotal', { count: menu.items.length }))
+              : null,
+          ]) : null,
       ]
     }
 
@@ -2653,7 +2752,7 @@ window.__ModuleLoader__.load({
               onOpen: (childId) => setPanes(addPane(paneStore.panes, childId)),
             })
             : null,
-          h(PaneOutline, { key: 'outline', paneRef, t }),
+          h(PaneOutline, { key: 'outline', ctx, sessionId, paneRef, t }),
           h('button', {
             key: 'native',
             type: 'button',
