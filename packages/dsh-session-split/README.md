@@ -67,7 +67,11 @@ view built from the retained event window.
   question cards — they are the host's own components.
 - The pane header is a fixed 48 px bar; it carries the Session title (13.5 px), a running dot, a single
   **`N subagents`** chip (hover lists them, click opens the list to open one in
-  a pane), and two stroke icons: open natively and remove pane.
+  a pane), a **user-message outline**, and two stroke icons: open natively and
+  remove pane. The outline lists the user messages already rendered in that pane,
+  numbered, with their first line; clicking one scrolls the pane to it. A message
+  that is not rendered yet (older history behind **Load earlier**) is not listed,
+  so the outline is exactly as deep as the pane itself.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that
   is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
@@ -131,6 +135,7 @@ view built from the retained event window.
 | Session row menu → **在分屏中打开** | Adds that Session as a pane and opens the workbench; works from anywhere, no gesture conflicts |
 | Drag a Session row **inside** the workbench | Adds it as a pane |
 | Pane title bar drag | Reorders panes |
+| Pane user-message outline | Numbered list of the user messages rendered in that pane; clicking one scrolls the pane to it |
 | Pane **↗** | Opens that Session in the shipped Conversation page |
 | Subagent chip | One `N subagents` chip; click to pick one and open it in a pane |
 

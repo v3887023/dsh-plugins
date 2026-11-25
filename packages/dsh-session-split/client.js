@@ -84,6 +84,10 @@ window.__ModuleLoader__.load({
       'panel.resize': '拖动调整列宽，双击复位',
       'panel.empty': '还没有窗格',
       'pane.openNative': '打开原生会话',
+      'pane.outline': '用户消息目录',
+      'pane.outlineEmpty': '还没有用户消息',
+      'pane.outlineJump': '跳到这条消息',
+      'pane.outlineNoText': '（这条消息没有文本）',
       'pane.openSubagent': '在分屏中打开这个子 Agent',
       'pane.moreSubagents': '更多子 Agent',
       'pane.subagentCount': '{count} 个子 Agent',
@@ -142,6 +146,10 @@ window.__ModuleLoader__.load({
       'panel.empty': 'No panes yet',
       'panel.dropPreview': 'Drop to add a pane',
       'pane.openNative': 'Open native conversation',
+      'pane.outline': 'User messages',
+      'pane.outlineEmpty': 'No user messages yet',
+      'pane.outlineJump': 'Jump to this message',
+      'pane.outlineNoText': '(this message has no text)',
       'pane.openSubagent': 'Open this subagent in a pane',
       'pane.moreSubagents': 'More subagents',
       'pane.subagentCount': '{count} subagents',
@@ -1578,6 +1586,12 @@ window.__ModuleLoader__.load({
       '.ssp-menu-item{appearance:none;display:flex;align-items:center;gap:6px;width:100%;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;text-align:left;padding:5px 8px;border-radius:6px;cursor:pointer}',
       '.ssp-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.ssp-menu-item-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      // User-message outline: a wider menu anchored under its header button.
+      '.ssp-outline{width:320px;max-width:320px;max-height:340px}',
+      '.ssp-outline-item{align-items:flex-start}',
+      '.ssp-outline-index{flex:0 0 auto;min-width:18px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
+      '.ssp-outline-empty{padding:10px 8px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
+      '.ssp-outline-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-picker{position:fixed;z-index:2147483001;width:330px;max-height:460px;display:flex;flex-direction:column;border-radius:10px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 12px 32px rgba(0,0,0,.42);overflow:hidden}',
       '.ssp-picker-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--dsw-alias-border-l1)}',
       '.ssp-picker-search{flex:1 1 auto;min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-specific-input-major);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;padding:5px 8px;outline:none}',
@@ -1688,6 +1702,14 @@ window.__ModuleLoader__.load({
     /** "Remove pane". */
     function CloseIcon() {
       return h(Icon, null, h('path', { d: 'M3.6 3.6l8.8 8.8M12.4 3.6l-8.8 8.8', strokeWidth: 1.5, strokeLinecap: 'round' }))
+    }
+
+    /** "User message outline": stacked lines with a leading dot. */
+    function OutlineIcon() {
+      return h(Icon, null, [
+        h('path', { key: 'a', d: 'M5.4 3.6h7.9M5.4 8h7.9M5.4 12.4h5.1', strokeWidth: 1.3, strokeLinecap: 'round' }),
+        h('path', { key: 'b', d: 'M2.9 3.6h.01M2.9 8h.01M2.9 12.4h.01', strokeWidth: 1.7, strokeLinecap: 'round' }),
+      ])
     }
 
     /** "Minimise into the floating bar". */
@@ -1955,6 +1977,110 @@ window.__ModuleLoader__.load({
             h('span', { key: 'l', className: 'ssp-menu-item-label' }, child.label),
           ]))) : null,
       ])
+    }
+
+    /**
+     * User-message outline for one pane.
+     *
+     * The shipped conversation renders (and virtualises) its own message list,
+     * so the outline reads the user rows that are on screen and jumps by
+     * scrolling the pane's own scrollport. Nothing about the chat flow is
+     * re-implemented, and an older message that is not rendered yet simply is
+     * not listed — the same bound the pane itself has.
+     */
+    function PaneOutline(props) {
+      const { paneRef, t } = props
+      const [menu, setMenu] = useState(null)
+      const buttonRef = useRef(null)
+
+      useEffect(() => {
+        if (menu === null) return undefined
+        const close = (event) => {
+          const node = buttonRef.current
+          if (node !== null && node !== undefined && node.contains(event.target)) return
+          if (event.target instanceof Element && event.target.closest('.ssp-outline') !== null) return
+          setMenu(null)
+        }
+        window.addEventListener('mousedown', close, true)
+        return () => window.removeEventListener('mousedown', close, true)
+      }, [menu])
+
+      /** The user rows in reading order, shipped rows first, fallback rows second. */
+      const userRows = (pane) => {
+        const shipped = [...pane.querySelectorAll('[data-chat-flow-kind="user"]')]
+        return shipped.length > 0 ? shipped : [...pane.querySelectorAll('.ssp-row-user')]
+      }
+
+      const openMenu = () => {
+        const node = buttonRef.current
+        if (node === null || node === undefined) return
+        const pane = paneRef.current
+        const items = pane === null || pane === undefined
+          ? []
+          : userRows(pane).map((row, index) => ({
+            index,
+            text: String(row.innerText ?? '').replace(/\s+/g, ' ').trim(),
+          }))
+        const rect = node.getBoundingClientRect()
+        const width = 320
+        const height = 340
+        setMenu({
+          left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)),
+          top: rect.bottom + 4 + height > window.innerHeight
+            ? Math.max(8, rect.top - height - 4)
+            : rect.bottom + 4,
+          items,
+        })
+      }
+
+      const jump = (index) => {
+        setMenu(null)
+        const pane = paneRef.current
+        if (pane === null || pane === undefined) return
+        const row = userRows(pane)[index]
+        if (row === undefined || row === null) return
+        const scroller = pane.querySelector('[data-conversation-scroll]')
+          ?? pane.querySelector('.ssp-transcript')
+          ?? pane
+        const box = scroller.getBoundingClientRect()
+        const rowBox = row.getBoundingClientRect()
+        const target = scroller.scrollTop + (rowBox.top - box.top) - Math.max(0, (scroller.clientHeight - rowBox.height) / 2)
+        try {
+          scroller.scrollTo({ top: Math.max(0, target), behavior: 'smooth' })
+        } catch {
+          scroller.scrollTop = Math.max(0, target)
+        }
+      }
+
+      return [
+        h('button', {
+          key: 'outline',
+          ref: buttonRef,
+          type: 'button',
+          className: 'ssp-icon-btn',
+          title: t('pane.outline'),
+          'aria-label': t('pane.outline'),
+          'data-active': menu !== null ? '' : undefined,
+          draggable: true,
+          onClick: () => (menu === null ? openMenu() : setMenu(null)),
+        }, h(OutlineIcon)),
+        menu !== null ? h('div', {
+          key: 'outline-menu',
+          className: 'ssp-menu ssp-outline',
+          style: { left: `${menu.left}px`, top: `${menu.top}px` },
+        }, menu.items.length === 0
+          ? h('div', { key: 'empty', className: 'ssp-outline-empty' }, t('pane.outlineEmpty'))
+          : menu.items.map((item) => h('button', {
+            key: `outline-${item.index}`,
+            type: 'button',
+            className: 'ssp-menu-item ssp-outline-item',
+            title: t('pane.outlineJump'),
+            onClick: () => jump(item.index),
+          }, [
+            h('span', { key: 'n', className: 'ssp-outline-index' }, String(item.index + 1)),
+            h('span', { key: 't', className: 'ssp-outline-text' }, item.text === '' ? t('pane.outlineNoText') : item.text),
+          ]))) : null,
+      ]
     }
 
     /** Multi-select Session picker opened from the toolbar. */
@@ -2527,6 +2653,7 @@ window.__ModuleLoader__.load({
               onOpen: (childId) => setPanes(addPane(paneStore.panes, childId)),
             })
             : null,
+          h(PaneOutline, { key: 'outline', paneRef, t }),
           h('button', {
             key: 'native',
             type: 'button',
@@ -3411,6 +3538,7 @@ window.__ModuleLoader__.load({
         setFollowOpened,
         flashPane,
         openNative,
+        PaneOutline,
         SplitWorkbench,
         SessionPane,
         SessionPicker,

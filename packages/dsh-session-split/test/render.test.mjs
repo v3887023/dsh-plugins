@@ -242,6 +242,18 @@ function classesOf(node, found = []) {
   // An unknown Session title falls back to its id prefix rather than empty text.
   const title = tree.children[0].children[1]
   assert.equal(title.children[0], 'Beta')
+
+  // The header offers the user-message outline beside the native and remove
+  // buttons; its trigger stays a plain header button until it is opened.
+  const head = tree.children[0]
+  const outline = head.children.find((child) => typeof child?.type === 'function' && child.type.name === 'PaneOutline')
+  assert.ok(outline !== undefined, 'the header carries the outline button')
+  const parts = render(api.PaneOutline, { paneRef: { current: null }, t: (key) => key })
+  assert.ok(Array.isArray(parts), 'closed outline renders the trigger only')
+  assert.equal(parts.filter((part) => part !== null && part !== undefined).length, 1)
+  assert.equal(parts[0].type, 'button')
+  assert.equal(parts[0].props['aria-label'], 'pane.outline')
+  assert.equal(parts[0].props['data-active'], undefined)
 }
 
 // --- sidebar entry and drop hint ----------------------------------------
