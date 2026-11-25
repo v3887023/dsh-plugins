@@ -77,13 +77,13 @@ view built from the retained event window.
   an assembly without it) the outline falls back to the user rows already on
   screen, which is exactly what the pane itself can show.
 - **A pane is busy while its own Turn runs or while one of its subagents is
-  working** — the header dot pulses for both (the subagent chip's dot pulses
-  too), matching how the shipped Session row reports activity. Hovering the dot
-  says which of the two it is.
+  working** — the header dot pulses in the business (teal) tint for both (the
+  subagent chip's dot pulses too), matching how the shipped Session row reports
+  activity. Hovering the dot says which of the two it is.
 - **A finished, unseen pane is marked strongly and in its own color**: the dot
-  grows into a breathing ring, the title bar and the pane border take the
-  business (teal) tint rather than the running dot's green, and a **Done** badge
-  appears next to the title. Focusing the pane clears it (see below).
+  turns **green** with a larger breathing ring, the title bar and the pane border
+  take a green tint, and a **Done** badge appears next to the title. Focusing the
+  pane clears it (see below).
 - **A pane's messages line up with its composer**: inside a pane the shipped chat
   column is given the composer's 16px gutter instead of the shipped 24px gutter
   plus its `min(100% - 32px, 920px)` width cap, so a narrow pane no longer wastes
