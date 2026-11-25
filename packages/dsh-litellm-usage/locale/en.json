@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "LiteLLM usage",
+    "description": "Shows the LiteLLM proxy key usage, limit, and remaining budget at the sidebar foot, with details on click."
+  }
+}

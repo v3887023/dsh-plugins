@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek 余额",
+    "description": "在左侧栏底部显示 DeepSeek 官方 API Key 的账户余额，并按固定基准余额展示剩余百分比。"
+  }
+}

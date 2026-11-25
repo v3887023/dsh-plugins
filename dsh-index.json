@@ -10,6 +10,28 @@
   },
   "plugins": [
     {
+      "name": "@v3887023/dsh-deepseek-balance",
+      "title": "dsh-deepseek-balance",
+      "description": {
+        "en": "Show the DeepSeek account balance.",
+        "zh": "显示 DeepSeek 账户余额。"
+      },
+      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-deepseek-balance",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "publishTimestamp": 1795571330,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "edfbbbfff3f569c6f55c25ce5905e29de9302e40",
+            "path": "packages/dsh-deepseek-balance"
+          }
+        }
+      ],
+      "icon": "packages/dsh-deepseek-balance/icon.svg"
+    },
+    {
       "name": "@v3887023/dsh-desktop-notify",
       "title": "dsh-desktop-notify",
       "description": {
@@ -29,6 +51,28 @@
           }
         }
       ]
+    },
+    {
+      "name": "@v3887023/dsh-litellm-usage",
+      "title": "dsh-litellm-usage",
+      "description": {
+        "en": "Show LiteLLM proxy usage (configure your own URL and key).",
+        "zh": "显示 LiteLLM 代理用量（自配地址与密钥）。"
+      },
+      "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-litellm-usage",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "publishTimestamp": 1795571330,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "edfbbbfff3f569c6f55c25ce5905e29de9302e40",
+            "path": "packages/dsh-litellm-usage"
+          }
+        }
+      ],
+      "icon": "packages/dsh-litellm-usage/icon.svg"
     },
     {
       "name": "@v3887023/dsh-noir-skin",

@@ -1,0 +1,12 @@
+- insert:
+    - id: deepseek-balance
+      name: '@v3887023/dsh-deepseek-balance'
+      config:
+        # API key credential name: the same one the official provider uses.
+        apiKeyEnv: 'DEEPSEEK_API_KEY'
+        baseUrl: 'https://api.deepseek.com'
+        path: '/deepseek-balance'
+        cacheSeconds: 30
+        # Optional reference balance used for the remaining-share percentage.
+        # Leave empty to hide the percentage.
+        baselineCurrency: 'CNY'

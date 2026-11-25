@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "LiteLLM 用量",
+    "description": "在左侧栏底部显示 LiteLLM 代理 Key 的用量、额度与剩余预算，点击可查看明细。"
+  }
+}

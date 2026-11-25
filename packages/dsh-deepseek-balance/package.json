@@ -1,0 +1,39 @@
+{
+  "name": "@v3887023/dsh-deepseek-balance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shows the DeepSeek official API key balance at the sidebar foot, as a share of a fixed baseline.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-general"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v3887023/dsh-plugins.git",
+    "directory": "packages/dsh-deepseek-balance"
+  },
+  "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-deepseek-balance"
+}

@@ -1,0 +1,10 @@
+- insert:
+    - id: litellm-usage
+      name: '@v3887023/dsh-litellm-usage'
+      config:
+        # Your LiteLLM proxy base URL, e.g. 'https://litellm.example.com'.
+        baseUrl: ''
+        # Credential name holding the proxy virtual key.
+        apiKeyEnv: 'LITELLM_API_KEY'
+        path: '/litellm-usage'
+        cacheSeconds: 20

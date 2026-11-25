@@ -1,0 +1,39 @@
+{
+  "name": "@v3887023/dsh-litellm-usage",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shows LiteLLM proxy key usage and remaining budget at the sidebar foot.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-general"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v3887023/dsh-plugins.git",
+    "directory": "packages/dsh-litellm-usage"
+  },
+  "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-litellm-usage"
+}
