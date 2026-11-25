@@ -88,6 +88,10 @@ view built from the retained event window.
   plus its `min(100% - 32px, 920px)` width cap, so a narrow pane no longer wastes
   width around the message column. The shipped Conversation page keeps its own
   layout — the override is scoped to panes and never reaches it.
+- **User bubbles get 70% of a pane's message column** (visible width, padding
+  included): the shipped cap (`min(0.702 * (100% - 32px), 82%)`) comes out around
+  65% in a narrow pane, so a pane releases the stack and caps the bubble itself.
+  The shipped page keeps its own cap.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
 - **`Highlight opened` switch** (on by default): opening a Session that is
