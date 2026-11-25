@@ -102,7 +102,10 @@ view built from the retained event window.
   so the workbench stays on screen and the new pane renders the shipped blank
   Conversation, ready to type, attach and send. A blank pane is exempt from the
   compact composer switch. The Session is an ordinary one: it appears in the
-  sidebar list and keeps its history.
+  sidebar list and keeps its history. While the workbench owns the column, the
+  hero's own **Choose workspace** picker stays here too: it creates that
+  Workspace's blank Session and swaps it into the current blank pane instead of
+  navigating to the native page.
 - **`Highlight opened` switch** (on by default): opening a Session that is
   already a pane keeps the workbench and flashes that pane instead of opening
   the native page — whether the request comes from a sidebar row, the Session

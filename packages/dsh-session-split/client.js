@@ -1170,6 +1170,101 @@ window.__ModuleLoader__.load({
       acknowledgeCompletion(ctx, sessionId)
     }
 
+    /** Marks an `openWorkspace` hook installed by this bundle. */
+    const OPEN_WORKSPACE_HOOK = Symbol.for('@v3887023/dsh-session-split/openWorkspace')
+
+    /** Whether the workbench panel currently owns the main column. */
+    function workbenchActive(ctx) {
+      try {
+        const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
+        const info = layout !== undefined && layout !== null && layout.panelInfo !== undefined && typeof layout.panelInfo.getSnapshot === 'function'
+          ? layout.panelInfo.getSnapshot()
+          : undefined
+        return info !== undefined && info !== null && info.activePanelId === PANEL_ID
+      } catch {
+        return false
+      }
+    }
+
+    /** Show a freshly created Session in a pane: reuse a blank pane, else add one. */
+    function showInPane(ctx, sessionId) {
+      if (typeof sessionId !== 'string' || sessionId === '') return
+      if (paneStore.panes.includes(sessionId)) {
+        flashPane(sessionId)
+        return
+      }
+      const byId = (() => {
+        try {
+          return sessionListState(ctx)?.byId ?? {}
+        } catch {
+          return {}
+        }
+      })()
+      // A hero (never prompted) pane is the natural slot for a new Workspace
+      // choice: the user is picking where the conversation they are writing
+      // belongs, not opening yet another empty pane.
+      const heroIndex = paneStore.panes.findIndex((id) => byId[id]?.blank === true)
+      if (heroIndex >= 0) {
+        const replaced = paneStore.panes[heroIndex]
+        const next = paneStore.panes.slice()
+        next[heroIndex] = sessionId
+        setPanes(next)
+        releaseSession(replaced)
+        return
+      }
+      setPanes(addPane(paneStore.panes, sessionId))
+    }
+
+    /**
+     * Keep `uiWorkspace.openWorkspace` inside the workbench.
+     *
+     * The shipped hero's Workspace picker runs `openWorkspace`, which creates
+     * the chosen Workspace's blank Session and *navigates* to it — that would
+     * tear the workbench down while the user is still arranging a conversation.
+     * While the workbench owns the main column the call creates the Session and
+     * shows it in a pane instead; everywhere else the shipped method runs
+     * untouched.
+     */
+    function hookOpenWorkspace(ctx) {
+      const install = (scope) => {
+        const workspace = typeof scope.get === 'function' ? scope.get('uiWorkspace') : undefined
+        if (workspace === undefined || workspace === null || typeof workspace.openWorkspace !== 'function') return
+        const current = workspace.openWorkspace
+        const previous = current !== null && (typeof current === 'function' || typeof current === 'object')
+          ? current[OPEN_WORKSPACE_HOOK]
+          : undefined
+        const original = typeof previous === 'function' ? previous : current
+        const hooked = function openWorkspace(workspaceId, beforeOpen, options) {
+          if (!workbenchActive(ctx)) return original.call(workspace, workspaceId, beforeOpen, options)
+          const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
+          if (sessions === undefined || sessions === null || typeof sessions.create !== 'function') return undefined
+          return Promise.resolve(sessions.create({ workspaceId })).then((created) => {
+            showInPane(ctx, created)
+          }).catch((error) => {
+            console.warn('[session-split] opening a Workspace in a pane failed:', error)
+          })
+        }
+        hooked[OPEN_WORKSPACE_HOOK] = original
+        try {
+          workspace.openWorkspace = hooked
+        } catch {
+          return
+        }
+        scope.effect(() => () => {
+          try {
+            const installed = workspace.openWorkspace
+            const ours = installed !== null && typeof installed === 'function'
+              && (installed === hooked || installed[OPEN_WORKSPACE_HOOK] === original)
+            if (ours) workspace.openWorkspace = original
+          } catch {
+            // A frozen service object: the hook lives until the page reloads.
+          }
+        }, 'session-split: openWorkspace hook')
+      }
+      if (typeof ctx.inject === 'function') ctx.inject(['uiWorkspace'], install)
+      else install(ctx)
+    }
+
     /**
      * Route every external "open this Session" call through the workbench.
      *
@@ -3701,6 +3796,12 @@ window.__ModuleLoader__.load({
         // it, and the ones that open a Session keep calling the host service
         // they already call.
         hookOpenSession(ctx)
+
+        // The shipped hero's Workspace picker calls `openWorkspace`, which
+        // navigates. While the workbench owns the column that pick is honoured
+        // as a pane instead, so choosing where a new conversation lives never
+        // throws the user onto the native page.
+        hookOpenWorkspace(ctx)
 
         // References live with the plugin, so they must die with it.
         ctx.effect(() => () => releaseAllSessions(), 'session-split: release sessions')
