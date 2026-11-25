@@ -2062,7 +2062,7 @@ window.__ModuleLoader__.load({
               turn,
               index: null,
               loaded: turn !== null && pane.querySelector(`[data-chat-turn="${String(turn)}"]`) !== null,
-              label: prompt !== '' ? prompt : (turn === null ? '' : t('pane.outlineTurn', { turn: turn + 1 })),
+              label: prompt !== '' ? prompt : (turn === null ? '' : t('pane.outlineTurn', { turn })),
             }
           })
           : (pane === null || pane === undefined ? [] : userRows(pane).map((row, index) => ({
@@ -2172,7 +2172,10 @@ window.__ModuleLoader__.load({
               title: t('pane.outlineJump'),
               onClick: () => { void jump(item) },
             }, [
-              h('span', { key: 'n', className: 'ssp-outline-index' }, String((item.turn === null ? item.index : item.turn) + 1)),
+              // `turn` is the Host's own 1-based turn number (the shipped rail
+              // prints it unchanged), so it is the label; the fallback list has
+              // no turn numbers and counts the rows it has.
+              h('span', { key: 'n', className: 'ssp-outline-index' }, String(item.turn === null ? item.index + 1 : item.turn)),
               h('span', { key: 't', className: 'ssp-outline-text' }, item.label === '' ? t('pane.outlineNoText') : item.label),
             ])),
             menu.wholeLog
