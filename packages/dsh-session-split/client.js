@@ -1544,6 +1544,13 @@ window.__ModuleLoader__.load({
       // A definite height for the shipped body, kept as a plain flex column.
       '.ssp-body{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
       '.ssp-body>*{flex:1 1 auto;min-width:0;min-height:0}',
+      // Panes are narrow, and the shipped chat column reserves a 24px gutter on
+      // top of a `min(100% - 32px, 920px)` width cap, so the messages sit
+      // visibly narrower than the composer. SessionPane tags its own column
+      // holder; inside a pane the column gets the composer's 16px gutter. The
+      // shipped page never carries that attribute, so its layout is untouched.
+      '.ssp-pane [data-ssp-chat-holder]{padding-left:16px;padding-right:16px}',
+      '.ssp-pane [data-ssp-chat-holder]>[data-chat-flow]{margin-left:0;margin-right:0;max-width:none}',
       // Compact composer: a placeholder bar laid over the pane's bottom edge.
       // It is absolutely positioned so showing/hiding it never re-flows the
       // message list — only opacity animates, which is what keeps it steady.
@@ -2512,6 +2519,38 @@ window.__ModuleLoader__.load({
         if (pending.length === 0) return
         setPending((list) => list.filter((item) => !lastUserTexts.has(item.text)))
       }, [lastUserTexts])
+
+      // Tag this pane's chat column holder so the stylesheet can match its
+      // gutter to the composer (see the `data-ssp-chat-holder` rules). The
+      // shipped body mounts after the pane and re-mounts when it is shown
+      // again, so this runs on those transitions and observes the first mount.
+      useEffect(() => {
+        const pane = paneRef.current
+        if (pane === null || pane === undefined) return undefined
+        let tagged = null
+        const tag = () => {
+          const flow = pane.querySelector('[data-chat-flow]')
+          const holder = flow === null ? null : flow.parentElement
+          if (holder === null) return false
+          tagged = holder
+          if (!holder.hasAttribute('data-ssp-chat-holder')) holder.setAttribute('data-ssp-chat-holder', '')
+          return true
+        }
+        tag()
+        let observer = null
+        if (tagged === null && typeof MutationObserver === 'function') {
+          observer = new MutationObserver(() => {
+            if (!tag()) return
+            observer.disconnect()
+            observer = null
+          })
+          observer.observe(pane, { childList: true, subtree: true })
+        }
+        return () => {
+          if (observer !== null) observer.disconnect()
+          if (tagged !== null && tagged.hasAttribute('data-ssp-chat-holder')) tagged.removeAttribute('data-ssp-chat-holder')
+        }
+      }, [retained.status, props.hiddenByMainView])
 
       // Follow the tail only while the reader is already at the bottom.
       useEffect(() => {

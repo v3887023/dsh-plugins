@@ -83,6 +83,11 @@ view built from the retained event window.
 - **A finished, unseen pane is marked strongly**: the dot grows into a breathing
   ring, the title bar and the pane border take a success tint, and a **Done**
   badge appears next to the title. Focusing the pane clears it (see below).
+- **A pane's messages line up with its composer**: inside a pane the shipped chat
+  column is given the composer's 16px gutter instead of the shipped 24px gutter
+  plus its `min(100% - 32px, 920px)` width cap, so a narrow pane no longer wastes
+  width around the message column. The shipped Conversation page keeps its own
+  layout — the override is scoped to panes and never reaches it.
 - **Add sessions from the toolbar**: `＋ Add session` lists every Session that is not already a pane; the list has search plus a **Group by workspace**
   switch on the right of the search box, and adds the whole selection at once.
 - **`Highlight opened` switch** (on by default): opening a Session that is
