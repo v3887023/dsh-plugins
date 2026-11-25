@@ -109,6 +109,9 @@ window.__ModuleLoader__.load({
       'pane.running': '运行中',
       'pane.childRunning': '子 Agent 运行中',
       'pane.done': '已完成',
+      'pane.mode': '模式',
+      'pane.modeLoading': '正在读取模式…',
+      'pane.modeFailed': '无法读取模式列表',
       'pane.idle': '空闲',
       'pane.more': '更早的消息请到原生会话查看',
       'pane.toolRunning': '执行中',
@@ -177,6 +180,9 @@ window.__ModuleLoader__.load({
       'pane.running': 'Running',
       'pane.childRunning': 'Subagent running',
       'pane.done': 'Done',
+      'pane.mode': 'Mode',
+      'pane.modeLoading': 'Loading modes…',
+      'pane.modeFailed': 'Could not load modes',
       'pane.idle': 'Idle',
       'pane.more': 'Older messages live in the native conversation',
       'pane.toolRunning': 'running',
@@ -423,8 +429,7 @@ window.__ModuleLoader__.load({
     }
 
     /** The whole Session list snapshot, or undefined when unavailable. */
-    function sessionListState(ctx) {
-      try {
+    function sessionListState(ctx) {      try {
         const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
         const list = sessions !== undefined && sessions !== null ? sessions.list : undefined
         if (list === undefined || list === null || typeof list.getSnapshot !== 'function') return undefined
@@ -1020,6 +1025,9 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /** The `remote.agentPresets` namespace, reachable only from an injected context. */
+    let remoteAgentPresets = undefined
+
     /** Read one Session title out of the sidebar list snapshot. */
     function sessionTitle(ctx, sessionId) {
       try {
@@ -1032,6 +1040,17 @@ window.__ModuleLoader__.load({
         return undefined
       }
       return undefined
+    }
+
+    /** The agent preset (mode) one Session runs, when the list snapshot names it. */
+    function sessionPresetOf(ctx, sessionId) {
+      try {
+        const state = sessionListState(ctx)
+        const value = state !== null && state !== undefined ? state.byId?.[sessionId]?.projectionValues?.agentPreset : undefined
+        return typeof value === 'string' && value !== '' ? value : undefined
+      } catch {
+        return undefined
+      }
     }
 
     /** Open one Session in the shipped Conversation panel. */
@@ -1706,6 +1725,8 @@ window.__ModuleLoader__.load({
       '.ssp-pane[data-unread]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 42%,var(--dsw-alias-border-l1))}',
       '.ssp-pane[data-unread] .ssp-pane-head{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 9%,transparent)}',
       '.ssp-pane-done{flex:0 0 auto;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 20%,transparent);color:var(--dsw-alias-state-success-primary);font-size:10.5px;font-weight:600;line-height:17px;letter-spacing:.01em}',
+      '.ssp-preset-btn{flex:0 0 auto;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.ssp-menu-item[data-active]{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 16%,transparent);color:var(--dsw-alias-state-business-primary)}',
       '.ssp-dot[data-state="error"]{background:var(--dsw-alias-state-error-primary)}',
       '.ssp-pane-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600;letter-spacing:.01em}',
       '.ssp-icon-btn{appearance:none;border:0;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;padding:1px 4px;border-radius:5px;font-size:12px;line-height:16px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center}',
@@ -2323,6 +2344,114 @@ window.__ModuleLoader__.load({
               ? h('div', { key: 'total', className: 'ssp-outline-total' }, t('pane.outlineTotal', { count: menu.items.length }))
               : null,
           ]) : null,
+      ]
+    }
+
+    /**
+     * Agent-preset ("mode") picker for a blank pane.
+     *
+     * The shipped mode picker lives in the Conversation header, which a pane
+     * deliberately does not render. The Host only accepts a preset change for a
+     * Session whose conversation has not started, so a pane offers the picker
+     * exactly there: the roster comes from the `agentPresets` Remote namespace
+     * and the switch is the same `select` call the shipped picker makes.
+     */
+    function PanePreset(props) {
+      const { ctx, sessionId, hero, t } = props
+      const [menu, setMenu] = useState(null)
+      const [current, setCurrent] = useState(() => sessionPresetOf(ctx, sessionId))
+      const [status, setStatus] = useState('idle')
+      const buttonRef = useRef(null)
+      // Remote namespaces are only readable from a context that injects
+      // `remote`; the plugin captures the agent-preset roster there (below) so
+      // rendering never touches the proxy without that injection.
+      const presets = remoteAgentPresets
+
+      useEffect(() => {
+        if (menu === null) return undefined
+        const close = (event) => {
+          const node = buttonRef.current
+          if (node !== null && node !== undefined && node.contains(event.target)) return
+          if (event.target instanceof Element && event.target.closest('.ssp-preset-menu') !== null) return
+          setMenu(null)
+        }
+        window.addEventListener('mousedown', close, true)
+        return () => window.removeEventListener('mousedown', close, true)
+      }, [menu])
+
+      if (hero !== true || presets === undefined || presets === null || typeof presets.list !== 'function') return null
+
+      const labelOf = (row) => (row !== null && row !== undefined && typeof row.name === 'string' && row.name !== '' ? row.name : String(row?.id ?? ''))
+
+      const open = async () => {
+        const node = buttonRef.current
+        if (node === null || node === undefined) return
+        const rect = node.getBoundingClientRect()
+        const width = 220
+        setMenu({
+          left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+          top: rect.bottom + 4,
+          rows: [],
+        })
+        setStatus('loading')
+        try {
+          const result = await presets.list()
+          if (result !== null && result !== undefined && result.ok === true) {
+            const rows = Array.isArray(result.value?.presets) ? result.value.presets : []
+            setMenu((previous) => (previous === null ? null : { ...previous, rows }))
+            setStatus('ready')
+          } else {
+            setStatus('failed')
+          }
+        } catch (error) {
+          console.warn('[session-split] reading agent presets failed:', error)
+          setStatus('failed')
+        }
+      }
+
+      const pick = async (row) => {
+        setMenu(null)
+        if (row === null || row === undefined || row.broken !== undefined || row.id === current) return
+        try {
+          const result = await presets.select(sessionId, row.id)
+          if (result !== null && result !== undefined && result.ok === true) {
+            setCurrent(typeof result.value === 'string' && result.value !== '' ? result.value : row.id)
+          } else {
+            console.warn('[session-split] switching the agent preset was refused:', result?.error ?? null)
+          }
+        } catch (error) {
+          console.warn('[session-split] switching the agent preset failed:', error)
+        }
+      }
+
+      return [
+        h('button', {
+          key: 'preset',
+          ref: buttonRef,
+          type: 'button',
+          className: 'ssp-btn ssp-preset-btn',
+          title: t('pane.mode'),
+          'aria-label': t('pane.mode'),
+          disabled: status === 'loading',
+          onClick: () => { if (menu === null) void open(); else setMenu(null) },
+        }, current !== undefined && current !== null ? current : t('pane.mode')),
+        menu !== null ? h('div', {
+          key: 'preset-menu',
+          className: 'ssp-menu ssp-preset-menu',
+          style: { left: `${menu.left}px`, top: `${menu.top}px`, minWidth: '220px' },
+        }, status === 'loading'
+          ? h('div', { key: 'loading', className: 'ssp-outline-empty' }, t('pane.modeLoading'))
+          : menu.rows.length === 0
+            ? h('div', { key: 'empty', className: 'ssp-outline-empty' }, status === 'failed' ? t('pane.modeFailed') : t('pane.modeLoading'))
+            : menu.rows.map((row) => h('button', {
+              key: String(row?.id ?? ''),
+              type: 'button',
+              className: 'ssp-menu-item',
+              'data-active': row?.id === current ? '' : undefined,
+              disabled: row?.broken !== undefined,
+              title: row?.broken !== undefined ? String(row.broken) : undefined,
+              onClick: () => { void pick(row) },
+            }, h('span', { key: 'n', className: 'ssp-menu-item-label' }, labelOf(row) || t('pane.mode'))))) : null,
       ]
     }
 
@@ -2986,6 +3115,7 @@ window.__ModuleLoader__.load({
               onOpen: (childId) => setPanes(addPane(paneStore.panes, childId)),
             })
             : null,
+          h(PanePreset, { key: 'preset', ctx, sessionId, hero: contentPhase.phase === 'hero', t }),
           h(PaneOutline, { key: 'outline', ctx, sessionId, paneRef, t }),
           h('button', {
             key: 'native',
@@ -3831,6 +3961,25 @@ window.__ModuleLoader__.load({
         // throws the user onto the native page.
         hookOpenWorkspace(ctx)
 
+        // The agent-preset roster lives under the `remote` service, whose
+        // namespaces are only readable from a context that injects it. Capture
+        // it once here so the pane mode picker never reaches the proxy from a
+        // context that is not allowed to.
+        // The agent-preset roster is a Remote *namespace*: reading it needs the
+        // dotted inject key, not just the `remote` service (Cordis refuses the
+        // property otherwise). Capture it once for the pane mode picker.
+        if (typeof ctx.inject === 'function') {
+          ctx.inject(['remote', 'remote.agentPresets'], (scope) => {
+            try {
+              remoteAgentPresets = scope.remote !== null && scope.remote !== undefined ? scope.remote.agentPresets : undefined
+            } catch (error) {
+              console.warn('[session-split] agent presets are unavailable:', error)
+              remoteAgentPresets = undefined
+            }
+            scope.effect(() => () => { remoteAgentPresets = undefined }, 'session-split: agent presets')
+          })
+        }
+
         // References live with the plugin, so they must die with it.
         ctx.effect(() => () => releaseAllSessions(), 'session-split: release sessions')
 
@@ -3926,6 +4075,7 @@ window.__ModuleLoader__.load({
         flashPane,
         openNative,
         PaneOutline,
+        PanePreset,
         SplitWorkbench,
         SessionPane,
         SessionPicker,

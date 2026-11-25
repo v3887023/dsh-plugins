@@ -94,11 +94,18 @@ function boot(storage = new Map(), options = {}) {
       if (name === 'locale') return { getSnapshot: () => ({ active: 'zh-CN' }) }
       if (name === 'layout') return { selectPanel() {} }
       if (name === 'uiWorkspace') return { openSession() {} }
+      if (name === 'remote') return options.remote
       return undefined
     },
     slots: {
       inject(key, callback) { return callback() },
       register(options, component) { registrations.push({ ...options, component }); return () => {} },
+    },
+    inject(names, callback) {
+      const wantsRemote = names.some((name) => name === 'remote' || name === 'remote.agentPresets')
+      if (!options.remote || !wantsRemote) return () => {}
+      callback({ remote: options.remote, effect: () => {} })
+      return () => {}
     },
   }
   plugin.apply(ctx)
@@ -312,6 +319,29 @@ function classesOf(node, found = []) {
   assert.ok(newButton !== undefined, 'the picker offers a new conversation')
   assert.equal(newButton.children[0], '＋ panel.newConversation')
   assert.equal(newButton.props.disabled, false)
+}
+
+// --- the mode picker appears only on a blank pane -----------------------
+{
+  const remote = {
+    agentPresets: {
+      list: async () => ({ ok: true, value: { presets: [{ id: 'standard', name: 'Standard' }] } }),
+      select: async () => ({ ok: true, value: 'standard' }),
+    },
+  }
+  const shell = boot(new Map(), { remote })
+  const api = shell.plugin.__internals
+  assert.equal(
+    render(api.PanePreset, { ctx: shell.ctx, sessionId: 's2', hero: false, t: (key) => key }),
+    null,
+    'a started pane has no mode picker',
+  )
+  const parts = render(api.PanePreset, { ctx: shell.ctx, sessionId: 's2', hero: true, t: (key) => key })
+  assert.ok(Array.isArray(parts), 'a blank pane renders the mode trigger')
+  assert.equal(parts[0].type, 'button')
+  assert.ok(String(parts[0].props.className).includes('ssp-preset-btn'))
+  assert.equal(parts[0].children[0], 'pane.mode', 'an unknown preset falls back to the Mode label')
+  assert.equal(parts[1], null, 'the roster loads only when the picker opens')
 }
 
 // --- sidebar entry and drop hint ----------------------------------------

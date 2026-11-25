@@ -105,7 +105,12 @@ view built from the retained event window.
   sidebar list and keeps its history. While the workbench owns the column, the
   hero's own **Choose workspace** picker stays here too: it creates that
   Workspace's blank Session and swaps it into the current blank pane instead of
-  navigating to the native page.
+  navigating to the native page. A blank pane's title bar also carries the
+  **mode** picker (the shipped Conversation header owns it on the native page):
+  it lists the Agent presets from the `agentPresets` Remote namespace and switches
+  through the same Host call the shipped picker uses. The Host only accepts a
+  preset change before the conversation starts, so the picker appears exactly on
+  a blank pane.
 - **`Highlight opened` switch** (on by default): opening a Session that is
   already a pane keeps the workbench and flashes that pane instead of opening
   the native page — whether the request comes from a sidebar row, the Session
