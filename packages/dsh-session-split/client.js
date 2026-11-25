@@ -2989,9 +2989,19 @@ window.__ModuleLoader__.load({
         // `document.body`, i.e. outside the pane. Treat a press or focus inside
         // one of those overlays as "still editing here", otherwise picking a
         // model collapses the composer (and the menu with it) before the pick
-        // lands.
-        const inOverlay = (target) => target instanceof Element
-          && target.closest('[role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"], [role="tooltip"]') !== null
+        // lands. The nested pickers are not all `role="menu"` (the model list
+        // opens as a `role="group"` surface with its own search box), so a
+        // fixed container directly under `body` counts too.
+        const inOverlay = (target) => {
+          if (!(target instanceof Element)) return false
+          if (target.closest('[role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"], [role="tooltip"], [role="group"], [role="search"], [role="combobox"]') !== null) return true
+          let node = target
+          while (node !== null && node !== document.body && node.parentElement !== null) {
+            if (node.parentElement === document.body && getComputedStyle(node).position === 'fixed') return true
+            node = node.parentElement
+          }
+          return false
+        }
         const onFocusOut = (event) => {
           if (pane.contains(event.relatedTarget)) return
           // Pressing a portalled menu item can move focus to nothing at all
