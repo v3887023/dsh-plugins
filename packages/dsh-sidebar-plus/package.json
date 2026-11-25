@@ -1,6 +1,6 @@
 {
   "name": "@v3887023/dsh-sidebar-plus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "One bundle for the sidebar: Session date groups, drag-to-reference with the \"Last updated\" order lock, folder-drop Workspaces, and a Settings page with one switch per feature.",
