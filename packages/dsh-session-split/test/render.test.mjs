@@ -102,7 +102,7 @@ function boot(storage = new Map(), options = {}) {
     },
   }
   plugin.apply(ctx)
-  return { plugin, registrations }
+  return { plugin, registrations, ctx }
 }
 
 /** Render one component with a fresh hook table. */
@@ -287,6 +287,28 @@ function classesOf(node, found = []) {
   assert.equal(done.children[0], 'pane.done')
   assert.equal(head.children[0].props['data-state'], 'unread')
   assert.equal(head.children[0].props.title, 'pane.unread')
+}
+
+// --- the add-session picker offers a new conversation -------------------
+{
+  const shell = boot()
+  const api = shell.plugin.__internals
+  const picker = render(api.SessionPicker, {
+    ctx: shell.ctx,
+    panes: [],
+    t: (key) => key,
+    anchor: { left: 10, top: 10 },
+    onAdd: () => {},
+    onClose: () => {},
+    workspaceLookup: {},
+    onNew: () => true,
+  })
+  const classes = classesOf(picker)
+  assert.ok(classes.includes('ssp-picker'), 'the picker renders')
+  const newButton = picker.children.find((child) => child?.props?.className === 'ssp-picker-new')
+  assert.ok(newButton !== undefined, 'the picker offers a new conversation')
+  assert.equal(newButton.children[0], '＋ panel.newConversation')
+  assert.equal(newButton.props.disabled, false)
 }
 
 // --- sidebar entry and drop hint ----------------------------------------

@@ -63,6 +63,8 @@ window.__ModuleLoader__.load({
       'panel.hint': '从左侧拖动会话到这里，或右键某个会话选择「在分屏中打开」',
       'panel.addCurrent': '加入当前会话',
       'panel.addSession': '添加会话',
+      'panel.newConversation': '新建对话',
+      'panel.creatingConversation': '正在新建…',
       'panel.addSelected': '添加 {count} 个',
       'panel.cancel': '取消',
       'panel.searchSessions': '搜索会话…',
@@ -128,6 +130,8 @@ window.__ModuleLoader__.load({
       'panel.hint': 'Drag a conversation here from the sidebar, or right-click one and pick Open in split view',
       'panel.addCurrent': 'Add current conversation',
       'panel.addSession': 'Add session',
+      'panel.newConversation': 'New conversation',
+      'panel.creatingConversation': 'Creating…',
       'panel.addSelected': 'Add {count}',
       'panel.cancel': 'Cancel',
       'panel.searchSessions': 'Search conversations…',
@@ -1625,6 +1629,9 @@ window.__ModuleLoader__.load({
       '.ssp-outline-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-outline-item[data-unloaded] .ssp-outline-text{color:var(--dsw-alias-label-secondary)}',
       '.ssp-outline-total{position:sticky;bottom:0;margin-top:2px;padding:5px 8px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay,#22262e);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}',
+      '.ssp-picker-new{appearance:none;display:flex;align-items:center;gap:6px;margin:6px 6px 0;padding:7px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;line-height:18px;text-align:left;cursor:pointer}',
+      '.ssp-picker-new:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.ssp-picker-new:disabled{opacity:.6;cursor:default}',
       '.ssp-picker{position:fixed;z-index:2147483001;width:330px;max-height:460px;display:flex;flex-direction:column;border-radius:10px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 12px 32px rgba(0,0,0,.42);overflow:hidden}',
       '.ssp-picker-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--dsw-alias-border-l1)}',
       '.ssp-picker-search{flex:1 1 auto;min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-specific-input-major);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;padding:5px 8px;outline:none}',
@@ -2214,10 +2221,11 @@ window.__ModuleLoader__.load({
 
     /** Multi-select Session picker opened from the toolbar. */
     function SessionPicker(props) {
-      const { ctx, panes, t, anchor, onAdd, onClose, workspaceLookup } = props
+      const { ctx, panes, t, anchor, onAdd, onClose, workspaceLookup, onNew } = props
       const [query, setQuery] = useState('')
       const [grouped, setGrouped] = useState(false)
       const [selected, setSelected] = useState(() => new Set())
+      const [creating, setCreating] = useState(false)
       const rootRef = useRef(null)
 
       useEffect(() => {
@@ -2229,6 +2237,18 @@ window.__ModuleLoader__.load({
         window.addEventListener('mousedown', close, true)
         return () => window.removeEventListener('mousedown', close, true)
       }, [onClose])
+
+      /** Create a blank Session on the Host and add it as a pane. */
+      const createConversation = async () => {
+        if (typeof onNew !== 'function' || creating) return
+        setCreating(true)
+        try {
+          const added = await onNew()
+          if (added !== false) onClose()
+        } finally {
+          setCreating(false)
+        }
+      }
 
       const rows = useMemo(() => {
         const state = sessionListState(ctx)
@@ -2294,6 +2314,13 @@ window.__ModuleLoader__.load({
         ref: rootRef,
         style: { left: `${anchor.left}px`, top: `${anchor.top}px` },
       }, [
+        h('button', {
+          key: 'new',
+          type: 'button',
+          className: 'ssp-picker-new',
+          disabled: creating,
+          onClick: () => { void createConversation() },
+        }, creating ? t('panel.creatingConversation') : `＋ ${t('panel.newConversation')}`),
         h('div', { key: 'head', className: 'ssp-picker-head' }, [
           h('input', {
             key: 'search',
@@ -2925,9 +2952,36 @@ window.__ModuleLoader__.load({
         renderFactorySlot: props !== undefined && props !== null ? props.renderFactorySlot : undefined,
       }
 
+      /**
+       * Create a blank conversation and open it as a pane.
+       *
+       * The Host creates it in the current Session's Workspace (or the first
+       * one when nothing is selected) without navigating, so the workbench
+       * stays on screen and the new pane renders the shipped blank
+       * Conversation — write, attach and send exactly as on the native page.
+       */
+      const createConversation = async () => {
+        const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
+        if (sessions === undefined || sessions === null || typeof sessions.create !== 'function') return false
+        const currentId = resolveCurrentSession(ctx)
+        const items = workspaceState !== null && workspaceState !== undefined && Array.isArray(workspaceState.items) ? workspaceState.items : []
+        const owner = currentId === undefined || currentId === null
+          ? undefined
+          : items.find((item) => Array.isArray(item.sessionIds) && item.sessionIds.includes(currentId))
+        const target = owner !== undefined ? owner : (items.length > 0 ? items[0] : undefined)
+        try {
+          const created = await sessions.create(target !== undefined ? { workspaceId: target.workspaceId } : {})
+          if (typeof created !== 'string' || created === '') return false
+          setPanes(addPane(paneStore.panes, created))
+          return true
+        } catch (error) {
+          console.warn('[session-split] creating a conversation failed:', error)
+          return false
+        }
+      }
+
       /** Shrink the workbench into the floating bar and hand the column back. */
-      const minimize = () => {
-        setMinimized(true)
+      const minimize = () => {        setMinimized(true)
         const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
         try {
           if (layout !== undefined && layout !== null && typeof layout.selectPanel === 'function') layout.selectPanel(null)
@@ -3148,6 +3202,7 @@ window.__ModuleLoader__.load({
           t,
           anchor: picker,
           workspaceLookup,
+          onNew: createConversation,
           onClose: () => setPicker(null),
           onAdd: (ids) => {
             let list = paneStore.panes
