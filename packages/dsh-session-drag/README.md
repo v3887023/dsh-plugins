@@ -1,5 +1,10 @@
 # Drag a Session: reference it, or refuse a reorder
 
+> **Superseded.** This plugin is now part of
+> [`@v3887023/dsh-sidebar-plus`](../dsh-sidebar-plus/README.md), which merges it
+> with the date groups and the folder-drop Workspace into one sidebar bundle with
+> one switch per feature. Disable this plugin **before** installing that one.
+
 `@v3887023/dsh-session-drag` claims one sidebar Session drag and answers it by
 where it is released.
 

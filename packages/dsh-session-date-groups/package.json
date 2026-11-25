@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "Groups the sidebar's single-list Sessions by date (Pinned, Today, Yesterday, then one collapsible section per calendar day), with each dated header naming its weekday.",
+  "description": "Superseded by @v3887023/dsh-sidebar-plus. Groups the sidebar's single-list Sessions by date (Pinned, Today, Yesterday, then one collapsible section per calendar day), with each dated header naming its weekday.",
   "scripts": {
     "test": "node test/groups.test.mjs"
   },

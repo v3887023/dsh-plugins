@@ -1,5 +1,10 @@
 # Drag a folder onto the sidebar to add a Workspace
 
+> **Superseded.** This plugin is now part of
+> [`@v3887023/dsh-sidebar-plus`](../dsh-sidebar-plus/README.md), which owns the
+> whole sidebar — the folder drop included — and adds a Settings switch for each
+> feature. Disable this plugin **before** installing that one.
+
 `@v3887023/dsh-workspace-drop` turns a folder dropped on the Harness sidebar into a
 Workspace, and opens a new Session in it.
 

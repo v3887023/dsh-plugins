@@ -30,8 +30,11 @@ const REPOSITORY = 'https://github.com/v3887023/dsh-plugins'
  * and tags remain resolvable.
  */
 const RETIRED = new Set([
+  'dsh-session-date-groups',
+  'dsh-session-drag',
   'dsh-session-reference',
   'dsh-session-sort-lock',
+  'dsh-workspace-drop',
 ])
 
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim()
@@ -43,9 +46,7 @@ const descriptions = {
   'dsh-session-split': { en: 'Split the main area into side-by-side live Session panes.', zh: '把主区域分成并排的多个实时会话窗格。' },
   'dsh-desktop-notify': { en: 'Desktop notifications when a Session finishes.', zh: '会话完成时发送桌面通知。' },
   'dsh-noir-skin': { en: 'Graphite and champagne theme.', zh: '墨金（石墨 + 香槟金）外观主题。' },
-  'dsh-session-date-groups': { en: 'Group the sidebar Session list by day.', zh: '侧栏会话按日期分组。' },
-  'dsh-session-drag': { en: 'Drag a Session to reference it; keep the “Last updated” order.', zh: '拖动会话即可引用它；锁定「最近更新」排序。' },
-  'dsh-workspace-drop': { en: 'Drop files into the workspace.', zh: '把文件拖进工作区。' },
+  'dsh-sidebar-plus': { en: 'Sidebar date groups, drag-to-reference, order lock, and folder-drop Workspaces, one switch each.', zh: '侧栏日期分组、拖拽引用、排序锁定、拖入文件夹建工作区，每项一个开关。' },
   'dsh-deepseek-balance': { en: 'Show the DeepSeek account balance.', zh: '显示 DeepSeek 账户余额。' },
   'dsh-litellm-usage': { en: 'Show LiteLLM proxy usage (configure your own URL and key).', zh: '显示 LiteLLM 代理用量（自配地址与密钥）。' },
 }

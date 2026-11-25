@@ -1,5 +1,10 @@
 # Group the session list by date
 
+> **Superseded.** This plugin is now part of
+> [`@v3887023/dsh-sidebar-plus`](../dsh-sidebar-plus/README.md), which owns the
+> whole sidebar — date groups included — and adds a Settings switch for each
+> feature. Disable this plugin **before** installing that one.
+
 `@v3887023/dsh-session-date-groups` turns the sidebar's **single-list** Session
 view into dated sections: **Pinned**, **Today**, **Yesterday**, and then one
 section per calendar day for everything older (for example **11月18日（星期三）**).

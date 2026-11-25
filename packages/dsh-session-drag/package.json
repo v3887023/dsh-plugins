@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "One gesture, two answers: dragging a Session onto a conversation references it there, while dropping it back on a \"Last updated\" list keeps the list from switching to manual order.",
+  "description": "Superseded by @v3887023/dsh-sidebar-plus. One gesture, two answers: dragging a Session onto a conversation references it there, while dropping it back on a \"Last updated\" list keeps the list from switching to manual order.",
   "scripts": {
     "test": "node test/mention.test.mjs && node test/registration.test.mjs && node test/lock.test.mjs"
   },

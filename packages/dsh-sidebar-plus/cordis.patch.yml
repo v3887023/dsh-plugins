@@ -1,0 +1,3 @@
+- insert:
+    - id: sidebar-plus
+      name: '@v3887023/dsh-sidebar-plus'
