@@ -163,7 +163,7 @@ function boot(options = {}) {
   const handlersOf = (type) => listeners.get(type) ?? []
   const slot = (name) => registrations.find((entry) => entry.name === name)
 
-  return { plugin, registrations, menuContributions, injections, serviceInjections, layoutCalls, opened: openedByHost, workspace: uiWorkspace, rawOpenSession, writes, styled, effects, fire, handlersOf, slot, store, listeners }
+  return { plugin, registrations, menuContributions, injections, serviceInjections, layoutCalls, opened: openedByHost, workspace: uiWorkspace, rawOpenSession, ctx, writes, styled, effects, fire, handlersOf, slot, store, listeners }
 }
 
 // --- contributions -------------------------------------------------------
@@ -304,6 +304,20 @@ function boot(options = {}) {
   // Unload restores the host method instead of leaving the hook behind.
   for (const cleanup of shell.effects) if (typeof cleanup === 'function') cleanup()
   assert.equal(workspace.openSession, shell.rawOpenSession, 'the host openSession is restored')
+}
+
+// --- a pane's ↗ reaches the shipped page, hook and all -------------------
+{
+  const shell = boot()
+  const api = shell.plugin.__internals
+  api.setPanes(['s1', 's2'])
+  shell.layoutCalls.length = 0
+
+  // The ↗ button must open its own Session on the Conversation page, not be
+  // caught by the workbench's own "stay here" hook.
+  api.openNative(shell.ctx, 's2')
+  assert.deepEqual(shell.opened, ['s2'], 'the pane ↗ opens that Session natively')
+  assert.deepEqual(shell.layoutCalls, [null], 'the workbench is left for the Conversation')
 }
 
 // --- a restored pane list is honored ------------------------------------

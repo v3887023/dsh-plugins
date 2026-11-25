@@ -536,7 +536,9 @@ window.__ModuleLoader__.load({
       // jump away from it, so the floating bar is there to come back to.
       if (paneStore.panes.length > 0) setMinimized(true)
       // The link has to reach the shipped page even when the Session is a pane,
-      // so this is the un-hooked open.
+      // so this is the un-hooked open; it also becomes the Session the
+      // workbench considers current.
+      setCurrentSession(sessionId)
       if (!openShippedSession(ctx, sessionId)) return false
       let attempts = 0
       const open = () => {
@@ -1016,6 +1018,7 @@ window.__ModuleLoader__.load({
     function openNative(ctx, sessionId) {
       const layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined
       // ↗ means the shipped page, so this bypasses the openSession hook.
+      setCurrentSession(sessionId)
       openShippedSession(ctx, sessionId)
       try {
         if (layout !== undefined && layout !== null && typeof layout.selectPanel === 'function') layout.selectPanel(null)
@@ -1091,17 +1094,60 @@ window.__ModuleLoader__.load({
     /** The host's own `uiWorkspace.openSession`, saved before it is hooked. */
     let nativeOpenSession = null
 
+    /**
+     * Marks an `openSession` hook installed by this bundle.
+     *
+     * A page that re-applies the plugin instead of reloading it can reach
+     * `hookOpenSession` twice with the first hook still in place; without this
+     * mark the second activation would treat its own hook as the host method
+     * and every deliberate native open would be swallowed by the reveal.
+     */
+    const OPEN_SESSION_HOOK = Symbol.for('@v3887023/dsh-session-split/openSession')
+
+    /**
+     * Positive while a deliberate native open must bypass the hook.
+     *
+     * The saved host method can be stale — a restarting `uiWorkspace` service
+     * installs a fresh hook, and the cleanup of an earlier activation may run
+     * without the host method coming back — so a native jump must also work
+     * when it lands on our own hook. Without this flag the reveal swallows it
+     * and the shipped page stays on whatever it showed before.
+     */
+    let hookBypass = 0
+
     /** Open one Session in the shipped Conversation page, ignoring the hook. */
     function openShippedSession(ctx, sessionId) {
       const workspace = typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined
+      hookBypass += 1
       try {
-        if (typeof nativeOpenSession === 'function') nativeOpenSession(sessionId)
-        else if (workspace !== undefined && workspace !== null && typeof workspace.openSession === 'function') workspace.openSession(sessionId)
+        let opened = false
+        if (typeof nativeOpenSession === 'function') {
+          try {
+            nativeOpenSession(sessionId)
+            opened = true
+          } catch {
+            // The saved method belonged to a disposed service instance; the
+            // hook itself still forwards while the bypass is on.
+            opened = false
+          }
+        }
+        if (!opened) {
+          if (workspace === undefined || workspace === null || typeof workspace.openSession !== 'function') return false
+          workspace.openSession(sessionId)
+        }
         return true
       } catch (error) {
         console.warn('[session-split] opening the Session failed:', error)
         return false
+      } finally {
+        hookBypass -= 1
       }
+    }
+
+    /** Mark one pane as the Session the user is looking at in the workbench. */
+    function focusPane(ctx, sessionId) {
+      setCurrentSession(sessionId)
+      acknowledgeCompletion(ctx, sessionId)
     }
 
     /**
@@ -1119,13 +1165,24 @@ window.__ModuleLoader__.load({
     function hookOpenSession(ctx) {
       const install = (scope) => {
         const workspace = typeof scope.get === 'function' ? scope.get('uiWorkspace') : undefined
-        if (workspace === undefined || workspace === null || typeof workspace.openSession !== 'function') return
-        const original = workspace.openSession
+        if (workspace === undefined || workspace === null || typeof workspace.openSession !== 'function') {
+          // Keep the saved host method: a restarting service must not leave the
+          // workbench with a hook that has nothing to forward to.
+          return
+        }
+        const current = workspace.openSession
+        const previous = current !== null && (typeof current === 'function' || typeof current === 'object')
+          ? current[OPEN_SESSION_HOOK]
+          : undefined
+        // Reuse the host method from an earlier activation instead of stacking
+        // a second hook on top of the first.
+        const original = typeof previous === 'function' ? previous : current
         nativeOpenSession = original.bind(workspace)
         const hooked = function openSession(sessionId) {
-          if (revealPane(ctx, sessionId)) return
+          if (hookBypass === 0 && revealPane(ctx, sessionId)) return
           return original.call(workspace, sessionId)
         }
+        hooked[OPEN_SESSION_HOOK] = original
         try {
           workspace.openSession = hooked
         } catch (error) {
@@ -1133,16 +1190,17 @@ window.__ModuleLoader__.load({
           console.warn('[session-split] could not hook openSession:', error)
           return
         }
-        if (workspace.openSession !== hooked) {
-          // A frozen service object: leave the host alone instead of pretending
-          // the workbench owns every open.
-          nativeOpenSession = null
-          return
-        }
+        // No identity check on the way back: a service object reached through
+        // the client's service proxy can hand back a wrapped function for the
+        // value just assigned, and treating that as "the hook did not stick"
+        // would drop the saved host method and leave the workbench unable to
+        // open the shipped page at all.
         scope.effect(() => () => {
-          nativeOpenSession = null
           try {
-            if (workspace.openSession === hooked) workspace.openSession = original
+            const installed = workspace.openSession
+            const ours = installed !== null && typeof installed === 'function'
+              && (installed === hooked || installed[OPEN_SESSION_HOOK] === original)
+            if (ours) workspace.openSession = original
           } catch {
             // A frozen service object: the hook lives until the page reloads.
           }
@@ -2441,9 +2499,10 @@ window.__ModuleLoader__.load({
         'data-dragging': props.dragging === true ? '' : undefined,
         'data-drop-target': props.dropTarget === true ? '' : undefined,
         ref: paneRef,
-        // Looking at a pane is enough to acknowledge its "finished, unseen" dot.
-        onFocusCapture: () => acknowledgeCompletion(ctx, sessionId),
-        onPointerDownCapture: () => acknowledgeCompletion(ctx, sessionId),
+        // Looking at a pane is enough to acknowledge its "finished, unseen" dot
+        // and to remember which Session the user is reading.
+        onFocusCapture: () => focusPane(ctx, sessionId),
+        onPointerDownCapture: () => focusPane(ctx, sessionId),
         style: typeof props.span === 'number' && props.span > 1 ? { gridColumn: `span ${props.span}` } : undefined,
       }, [
         h('header', {
@@ -3351,6 +3410,7 @@ window.__ModuleLoader__.load({
         setBarPosition,
         setFollowOpened,
         flashPane,
+        openNative,
         SplitWorkbench,
         SessionPane,
         SessionPicker,
