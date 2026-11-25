@@ -82,6 +82,16 @@
       "homepage": "https://github.com/v3887023/dsh-plugins/tree/main/packages/dsh-litellm-usage",
       "versions": [
         {
+          "version": "1.0.1",
+          "publishTimestamp": 1795571810,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/v3887023/dsh-plugins",
+            "commit": "6f7683dc58f63c77a7544fb79d47aed9098a917e",
+            "path": "packages/dsh-litellm-usage"
+          }
+        },
+        {
           "version": "1.0.0",
           "publishTimestamp": 1795571330,
           "source": {
