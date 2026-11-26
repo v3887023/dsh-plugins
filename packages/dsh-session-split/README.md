@@ -44,11 +44,10 @@ view built from the retained event window.
 ## Layout
 
 - 1 to 8 panes in an automatic grid: 2 side by side, 3 as columns, 4 as 2×2,
-  and 5–8 as four columns — the ends keep full-height panes, the columns
-  between them stack two halves each, so the shape is always full (5: one
-  stacked pair, 6: two, 7: three, 8: four). The 5–8 shapes also apply when the
-  column control is pinned to 4; a double-click moves a lone stacked pair to
-  another column.
+  and 5–8 as four columns — full-height panes fill from the left, stacked
+  halves fill from the right, so the shape is always full (5: one stacked
+  pair, 6: two, 7: three, 8: four). The 5–8 shapes also apply when the column
+  control is pinned to 4.
 - A manual column override in the toolbar (`Auto` / `2` / `3` / `4`) pins the
   column count; rows follow from the pane count.
 - **Drag a divider to resize columns** (like an IDE): each pair of neighbouring

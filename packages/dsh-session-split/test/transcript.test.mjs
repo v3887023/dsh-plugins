@@ -146,48 +146,36 @@ assert.deepEqual(api.planGrid(1), { columns: 1, rows: 1, tiles: null })
 assert.deepEqual(api.planGrid(2), { columns: 2, rows: 1, tiles: null })
 assert.deepEqual(api.planGrid(3), { columns: 3, rows: 1, tiles: null })
 assert.deepEqual(api.planGrid(4), { columns: 2, rows: 2, tiles: null })
-// Five panes: a stacked pair in one column, three full-height panes beside it.
+// Five panes: three full-height panes from the left, a stacked pair on the right.
 const fivePanes = {
-  columns: 4,
-  rows: 2,
-  tiles: [
-    { column: 1, row: 1, rowSpan: 1 },
-    { column: 1, row: 2, rowSpan: 1 },
-    { column: 2, row: 1, rowSpan: 2 },
-    { column: 3, row: 1, rowSpan: 2 },
-    { column: 4, row: 1, rowSpan: 2 },
-  ],
-}
-assert.deepEqual(api.planGrid(5), fivePanes)
-assert.deepEqual(api.planGrid(5, 4), fivePanes)
-// The stacked pair can move to another column.
-assert.deepEqual(api.planGrid(5, 4, 3), {
   columns: 4,
   rows: 2,
   tiles: [
     { column: 1, row: 1, rowSpan: 2 },
     { column: 2, row: 1, rowSpan: 2 },
-    { column: 3, row: 1, rowSpan: 1 },
-    { column: 3, row: 2, rowSpan: 1 },
-    { column: 4, row: 1, rowSpan: 2 },
+    { column: 3, row: 1, rowSpan: 2 },
+    { column: 4, row: 1, rowSpan: 1 },
+    { column: 4, row: 2, rowSpan: 1 },
   ],
-})
+}
+assert.deepEqual(api.planGrid(5), fivePanes)
+assert.deepEqual(api.planGrid(5, 4), fivePanes)
 // Manual override wins, but never yields more columns than panes.
 assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })
 assert.deepEqual(api.planGrid(5, 2), { columns: 2, rows: 3, tiles: null })
 assert.deepEqual(api.planGrid(5, 3), { columns: 3, rows: 2, tiles: null })
 assert.deepEqual(api.planGrid(2, 4), { columns: 2, rows: 1, tiles: null })
-// Six panes in four columns: two full-height panes, four stacked halves.
+// Six panes in four columns: two full-height panes on the left, two stacked pairs.
 const sixPanes = {
   columns: 4,
   rows: 2,
   tiles: [
     { column: 1, row: 1, rowSpan: 2 },
-    { column: 2, row: 1, rowSpan: 1 },
-    { column: 2, row: 2, rowSpan: 1 },
+    { column: 2, row: 1, rowSpan: 2 },
     { column: 3, row: 1, rowSpan: 1 },
     { column: 3, row: 2, rowSpan: 1 },
-    { column: 4, row: 1, rowSpan: 2 },
+    { column: 4, row: 1, rowSpan: 1 },
+    { column: 4, row: 2, rowSpan: 1 },
   ],
 }
 assert.deepEqual(api.planGrid(6), sixPanes)
