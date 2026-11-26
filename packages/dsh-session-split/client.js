@@ -1794,7 +1794,11 @@ window.__ModuleLoader__.load({
       '.ssp-empty{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center;color:var(--dsw-alias-label-tertiary)}',
       '.ssp-empty-title{font-size:14px;color:var(--dsw-alias-label-secondary)}',
       '.ssp-empty-hint{max-width:440px;line-height:20px;font-size:12.5px}',
-      '.ssp-grid{flex:1 1 auto;min-height:0;display:grid;gap:8px;background:#000;padding:8px;position:relative}',
+      '.ssp-grid{flex:1 1 auto;min-height:0;display:grid;gap:8px;background:var(--dsw-alias-bg-module-platform,var(--dsw-alias-bg-base));padding:8px;position:relative}',
+      // Light theme: the platform fill is already a step below the pane surface.
+      // Dark theme: the shipped base is nearly black, so pull the gap further
+      // down instead of using a light fill.
+      'body[data-ds-dark-theme] .ssp-grid{background:color-mix(in srgb,var(--dsw-alias-bg-base) 25%,#000)}',
       '.ssp-gutter{position:absolute;top:0;bottom:0;width:11px;transform:translateX(-50%);cursor:col-resize;z-index:4;touch-action:none;border-radius:2px;background:transparent}',
       '.ssp-gutter:hover{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 38%,transparent)}',
       '.ssp-gutter:active{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 60%,transparent)}',
