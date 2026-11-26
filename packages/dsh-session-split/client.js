@@ -566,6 +566,11 @@ window.__ModuleLoader__.load({
       setCurrentSession(sessionId)
       if (!openShippedSession(ctx, sessionId)) return false
       let attempts = 0
+      // The right column learns its Session from the native page's layout, so
+      // the surface it needs is mounted a beat after the panel flips — and a
+      // large conversation keeps it busy longer than a fixed retry allows.
+      // Keep asking while the service reports "no session surface" and stop on
+      // any other outcome.
       const open = () => {
         attempts += 1
         let panel
@@ -574,23 +579,21 @@ window.__ModuleLoader__.load({
             ? layout.panelInfo.getSnapshot()
             : undefined
         } catch { /* treated as not revealed yet */ }
-        if (panel !== undefined && panel.activePanelId === null) {
-          // The right column learns its Session from a layout subscription; give
-          // it a beat after the panel flips, and retry once if it is not there.
-          const attemptOpen = (retry) => {
-            try {
-              if (sidebarRight !== undefined && sidebarRight !== null && typeof sidebarRight.openResource === 'function') {
-                sidebarRight.openResource(fileAddressFor(sessionId, rawPath))
-              }
-            } catch (error) {
-              if (retry) window.setTimeout(() => attemptOpen(false), 400)
-              else console.warn('[session-split] opening the file on the native page failed:', error)
+        const revealed = panel !== undefined && panel.activePanelId === null
+        if (revealed && sidebarRight !== undefined && sidebarRight !== null && typeof sidebarRight.openResource === 'function') {
+          try {
+            sidebarRight.openResource(fileAddressFor(sessionId, rawPath))
+            return
+          } catch (error) {
+            const message = String((error && error.message) || error)
+            if (!message.includes('no session surface')) {
+              console.warn('[session-split] opening the file on the native page failed:', error)
+              return
             }
           }
-          window.setTimeout(() => attemptOpen(true), 180)
-          return
         }
-        if (attempts < 60) window.setTimeout(open, 50)
+        if (attempts < 40) window.setTimeout(open, 120)
+        else console.warn('[session-split] opening the file on the native page failed: the Session surface never mounted')
       }
       window.setTimeout(open, 80)
       return true
