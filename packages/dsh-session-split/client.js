@@ -108,6 +108,8 @@ window.__ModuleLoader__.load({
       'pane.retry': '重试',
       'pane.running': '运行中',
       'pane.childRunning': '子 Agent 运行中',
+      'pane.childActive': '执行中',
+      'pane.childIdle': '已完成',
       'pane.done': '已完成',
       'pane.mode': '模式',
       'pane.modeLoading': '正在读取模式…',
@@ -179,6 +181,8 @@ window.__ModuleLoader__.load({
       'pane.retry': 'Retry',
       'pane.running': 'Running',
       'pane.childRunning': 'Subagent running',
+      'pane.childActive': 'Running',
+      'pane.childIdle': 'Done',
       'pane.done': 'Done',
       'pane.mode': 'Mode',
       'pane.modeLoading': 'Loading modes…',
@@ -1881,7 +1885,8 @@ window.__ModuleLoader__.load({
       '.ssp-pane-flash{position:relative;z-index:2;outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:-2px;animation:ssp-flash-out 1.6s ease-out forwards}',
       '@keyframes ssp-flash-out{0%{outline-color:var(--dsw-alias-state-business-primary)}70%{outline-color:var(--dsw-alias-state-business-primary)}100%{outline-color:transparent}}',
       '.ssp-chip-dot{width:5px;height:5px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto}',
-      '.ssp-chip[data-running="running"] .ssp-chip-dot{background:var(--dsw-alias-state-success-primary);animation:ssp-pulse 1.6s ease-in-out infinite}',
+      '.ssp-chip[data-running="running"] .ssp-chip-dot{background:var(--dsw-alias-state-business-primary);animation:ssp-pulse 1.6s ease-in-out infinite}',
+      '.ssp-chip-state{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:10.5px;line-height:16px;white-space:nowrap}',
       '.ssp-chip-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-menu{position:fixed;z-index:2147483000;min-width:170px;max-width:280px;max-height:300px;overflow:auto;padding:4px;border-radius:9px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 10px 28px rgba(0,0,0,.35)}',
       '.ssp-menu-item{appearance:none;display:flex;align-items:center;gap:6px;width:100%;border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;text-align:left;padding:5px 8px;border-radius:6px;cursor:pointer}',
@@ -2286,6 +2291,7 @@ window.__ModuleLoader__.load({
           }, [
             h('span', { key: 'd', className: 'ssp-chip-dot', 'data-running': child.running ? 'running' : undefined }),
             h('span', { key: 'l', className: 'ssp-menu-item-label' }, child.label),
+            h('span', { key: 's', className: 'ssp-chip-state' }, child.running ? t('pane.childActive') : t('pane.childIdle')),
           ]))) : null,
       ])
     }
