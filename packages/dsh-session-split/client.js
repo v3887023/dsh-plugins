@@ -1849,7 +1849,7 @@ window.__ModuleLoader__.load({
       // anything, which reads as the bar growing into the real input.
       '@keyframes ssp-composer-reveal{from{clip-path:inset(55% 0 0 0);opacity:.55}to{clip-path:inset(0 0 0 0);opacity:1}}',
       '@keyframes ssp-bar-in{from{opacity:0;transform:translateY(10px)}to{opacity:.62;transform:none}}',
-      '@media (prefers-reduced-motion:reduce){.ssp-compact-bar,.ssp-pane[data-compact]:not([data-collapsed]) [data-composer-card],.ssp-dot[data-state="running"],.ssp-dot[data-state="unread"],.ssp-chip[data-running="running"] .ssp-chip-dot{animation:none;transition:none}}',
+      '@media (prefers-reduced-motion:reduce){.ssp-compact-bar,.ssp-pane[data-compact]:not([data-collapsed]) [data-composer-card],.ssp-dot[data-state="running"],.ssp-dot[data-state="unread"],.ssp-chip-dot[data-running="running"]{animation:none;transition:none}}',
       // A 48px title bar: `min-height` + centred content, not padding, decides
       // the height, so a longer title or a subagent chip never makes one pane's
       // bar taller than its neighbours'.
@@ -1885,7 +1885,7 @@ window.__ModuleLoader__.load({
       '.ssp-pane-flash{position:relative;z-index:2;outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:-2px;animation:ssp-flash-out 1.6s ease-out forwards}',
       '@keyframes ssp-flash-out{0%{outline-color:var(--dsw-alias-state-business-primary)}70%{outline-color:var(--dsw-alias-state-business-primary)}100%{outline-color:transparent}}',
       '.ssp-chip-dot{width:5px;height:5px;border-radius:50%;background:var(--dsw-alias-state-idle-primary);flex:0 0 auto}',
-      '.ssp-chip[data-running="running"] .ssp-chip-dot{background:var(--dsw-alias-state-business-primary);animation:ssp-pulse 1.6s ease-in-out infinite}',
+      '.ssp-chip-dot[data-running="running"]{background:var(--dsw-alias-state-business-primary);animation:ssp-pulse 1.6s ease-in-out infinite}',
       '.ssp-chip-state{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:10.5px;line-height:16px;white-space:nowrap}',
       '.ssp-chip-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-menu{position:fixed;z-index:2147483000;min-width:170px;max-width:280px;max-height:300px;overflow:auto;padding:4px;border-radius:9px;background:var(--dsw-alias-bg-overlay,#22262e);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 10px 28px rgba(0,0,0,.35)}',
