@@ -543,6 +543,26 @@ window.__ModuleLoader__.load({
       return `dsh-resource://file/session/${encodeURIComponent(String(sessionId))}/${path}`
     }
 
+    /** The Session and path inside a `dsh-resource://file/session/<id>/<path>` address. */
+    function parseSessionFileAddress(address) {
+      const prefix = 'dsh-resource://file/session/'
+      if (typeof address !== 'string' || !address.startsWith(prefix)) return undefined
+      const rest = address.slice(prefix.length)
+      const decode = (part) => {
+        try {
+          return decodeURIComponent(part)
+        } catch {
+          return part
+        }
+      }
+      const slash = rest.indexOf('/')
+      if (slash < 0) return { sessionId: decode(rest), path: '' }
+      return {
+        sessionId: decode(rest.slice(0, slash)),
+        path: rest.slice(slash + 1).split('/').map(decode).join('/'),
+      }
+    }
+
     /**
      * Leave the workbench for the native Conversation and open the file there.
      *
@@ -1195,6 +1215,9 @@ window.__ModuleLoader__.load({
     /** Marks an `openWorkspace` hook installed by this bundle. */
     const OPEN_WORKSPACE_HOOK = Symbol.for('@v3887023/dsh-session-split/openWorkspace')
 
+    /** Marks an `openResource` hook installed by this bundle. */
+    const OPEN_RESOURCE_HOOK = Symbol.for('@v3887023/dsh-session-split/openResource')
+
     /**
      * Sessions this workbench created as blank panes (hero) and that are still
      * blank. A Workspace choice from a hero belongs to that pane, so the picker
@@ -1295,6 +1318,54 @@ window.__ModuleLoader__.load({
         }, 'session-split: openWorkspace hook')
       }
       if (typeof ctx.inject === 'function') ctx.inject(['uiWorkspace'], install)
+      else install(ctx)
+    }
+
+    /**
+     * Keep the shipped file links working while the workbench owns the column.
+     *
+     * The shipped chat renders inline file paths (including the ones inside a
+     * table cell or an inline code span) as links whose click calls
+     * `sidebarRight.openResource`. That write needs the native page's Session
+     * surface, which a global panel does not have, so the click ends in
+     * "no session surface is mounted". While the workbench is in front, a
+     * session-scoped file address is opened through the native page instead —
+     * the same reveal the pane's own file-link handler uses.
+     */
+    function hookOpenResource(ctx) {
+      const install = (scope) => {
+        const sidebar = typeof scope.get === 'function' ? scope.get('sidebarRight') : undefined
+        if (sidebar === undefined || sidebar === null || typeof sidebar.openResource !== 'function') return
+        const current = sidebar.openResource
+        const previous = current !== null && (typeof current === 'function' || typeof current === 'object')
+          ? current[OPEN_RESOURCE_HOOK]
+          : undefined
+        const original = typeof previous === 'function' ? previous : current
+        const hooked = function openResource(address, options) {
+          if (workbenchActive(ctx)) {
+            const parsed = parseSessionFileAddress(address)
+            if (parsed !== undefined && parsed.sessionId !== '' && openFileOnNativePage(ctx, parsed.sessionId, parsed.path)) return
+          }
+          return original.apply(sidebar, arguments)
+        }
+        hooked[OPEN_RESOURCE_HOOK] = original
+        try {
+          sidebar.openResource = hooked
+        } catch {
+          return
+        }
+        scope.effect(() => () => {
+          try {
+            const installed = sidebar.openResource
+            const ours = installed !== null && typeof installed === 'function'
+              && (installed === hooked || installed[OPEN_RESOURCE_HOOK] === original)
+            if (ours) sidebar.openResource = original
+          } catch {
+            // A frozen service object: the hook lives until the page reloads.
+          }
+        }, 'session-split: openResource hook')
+      }
+      if (typeof ctx.inject === 'function') ctx.inject(['sidebarRight'], install)
       else install(ctx)
     }
 
@@ -3982,6 +4053,11 @@ window.__ModuleLoader__.load({
         // as a pane instead, so choosing where a new conversation lives never
         // throws the user onto the native page.
         hookOpenWorkspace(ctx)
+
+        // Inline file links in the shipped chat call `sidebarRight.openResource`,
+        // which throws while the workbench owns the column. Route those clicks
+        // through the native page instead of letting the shipped page fail.
+        hookOpenResource(ctx)
 
         // The agent-preset roster lives under the `remote` service, whose
         // namespaces are only readable from a context that injects it. Capture
