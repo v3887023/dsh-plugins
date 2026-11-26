@@ -1755,8 +1755,8 @@ window.__ModuleLoader__.load({
       // get a narrow `2ch` column: right-aligned digits of one and two widths
       // line up while the column itself stays close to the menu edge.
       '.ssp-outline{width:320px;max-width:320px;max-height:340px;display:flex;flex-direction:column;padding:0;overflow:hidden}',
-      '.ssp-outline-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:2px}',
-      '.ssp-outline-item{display:grid;grid-template-columns:2ch 1fr;column-gap:10px;align-items:start;padding:5px 8px 5px 0}',
+      '.ssp-outline-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:4px}',
+      '.ssp-outline-item{display:grid;grid-template-columns:2.2ch 1fr;column-gap:10px;align-items:start;padding:5px 8px 5px 4px}',
       '.ssp-outline-index{min-width:0;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
       '.ssp-outline-empty{padding:10px 8px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
       '.ssp-outline-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
