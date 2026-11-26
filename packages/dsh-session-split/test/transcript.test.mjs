@@ -160,6 +160,18 @@ const fivePanes = {
 }
 assert.deepEqual(api.planGrid(5), fivePanes)
 assert.deepEqual(api.planGrid(5, 4), fivePanes)
+// The stacked pair can move to another column.
+assert.deepEqual(api.planGrid(5, 4, 3), {
+  columns: 4,
+  rows: 2,
+  tiles: [
+    { column: 1, row: 1, rowSpan: 2 },
+    { column: 2, row: 1, rowSpan: 2 },
+    { column: 3, row: 1, rowSpan: 1 },
+    { column: 3, row: 2, rowSpan: 1 },
+    { column: 4, row: 1, rowSpan: 2 },
+  ],
+})
 assert.deepEqual(api.planGrid(6), { columns: 3, rows: 2, tiles: null })
 // Manual override wins, but never yields more columns than panes.
 assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })

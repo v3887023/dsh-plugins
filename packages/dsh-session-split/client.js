@@ -821,26 +821,26 @@ window.__ModuleLoader__.load({
      * @param override - 2/3/4 to pin the column count, anything else for auto.
      * @returns `{ columns, rows }`.
      */
-    function planGrid(count, override) {
+    function planGrid(count, override, stackColumn) {
       const safe = Math.max(0, Math.min(MAX_PANES, Math.floor(Number(count) || 0)))
       if (safe === 0) return { columns: 1, rows: 1, tiles: null }
       const manual = override === 2 || override === 3 || override === 4 ? override : 0
       const columns = Math.min(manual > 0 ? manual : autoColumns(safe), safe)
       const rows = Math.ceil(safe / columns)
       // Five panes: one column holds a stacked pair and the other three keep a
-      // full-height pane each — four columns, every cell used.
+      // full-height pane each — four columns, every cell used. Which column
+      // holds the pair is the user's choice (a double-click on a pane).
       if (safe === 5 && (manual === 0 || manual === 4)) {
-        return {
-          columns: 4,
-          rows: 2,
-          tiles: [
-            { column: 1, row: 1, rowSpan: 1 },
-            { column: 1, row: 2, rowSpan: 1 },
-            { column: 2, row: 1, rowSpan: 2 },
-            { column: 3, row: 1, rowSpan: 2 },
-            { column: 4, row: 1, rowSpan: 2 },
-          ],
+        const stack = stackColumn === 2 || stackColumn === 3 || stackColumn === 4 ? stackColumn : 1
+        const tiles = []
+        for (let col = 1; col <= 4; col += 1) {
+          if (col === stack) {
+            tiles.push({ column: col, row: 1, rowSpan: 1 }, { column: col, row: 2, rowSpan: 1 })
+          } else {
+            tiles.push({ column: col, row: 1, rowSpan: 2 })
+          }
         }
+        return { columns: 4, rows: 2, tiles }
       }
       return { columns, rows, tiles: null }
     }
@@ -851,13 +851,14 @@ window.__ModuleLoader__.load({
 
     /** Persisted workbench state, read once per page load. */
     function readPersistedState() {
-      const empty = { panes: [], columns: 0, widths: [], minimized: false, bar: null, followOpened: true, compactComposer: false, workbenchOpen: false }
+      const empty = { panes: [], columns: 0, widths: [], minimized: false, bar: null, followOpened: true, compactComposer: false, workbenchOpen: false, stackColumn: 1 }
       try {
         const raw = window.localStorage.getItem(STORAGE_KEY)
         if (typeof raw !== 'string' || raw === '') return empty
         const parsed = JSON.parse(raw)
         if (parsed === null || typeof parsed !== 'object') return empty
         const columns = parsed.columns === 2 || parsed.columns === 3 || parsed.columns === 4 ? parsed.columns : 0
+        const stackColumn = parsed.stackColumn === 2 || parsed.stackColumn === 3 || parsed.stackColumn === 4 ? parsed.stackColumn : 1
         const bar = parsed.bar !== null && typeof parsed.bar === 'object'
           && Number.isFinite(Number(parsed.bar.left)) && Number.isFinite(Number(parsed.bar.top))
           ? { left: Number(parsed.bar.left), top: Number(parsed.bar.top) }
@@ -871,6 +872,7 @@ window.__ModuleLoader__.load({
           followOpened: parsed.followOpened !== false,
           compactComposer: parsed.compactComposer === true,
           workbenchOpen: parsed.workbenchOpen === true,
+          stackColumn,
         }
       } catch {
         return empty
@@ -891,6 +893,7 @@ window.__ModuleLoader__.load({
       // on top of the Conversation, so `sidebarRight` still sees a Session on
       // screen (file opening, right column) while the split view is visible.
       workbenchOpen: persistedState.workbenchOpen,
+      stackColumn: persistedState.stackColumn,
       flash: null,
     })
 
@@ -906,6 +909,7 @@ window.__ModuleLoader__.load({
           followOpened: paneStore.followOpened,
           compactComposer: paneStore.compactComposer,
           workbenchOpen: paneStore.workbenchOpen,
+          stackColumn: paneStore.stackColumn,
         }))
       } catch {
         /* a locked profile keeps the state for this page only */
@@ -922,6 +926,7 @@ window.__ModuleLoader__.load({
       paneStore.followOpened = next.followOpened !== undefined ? next.followOpened : paneStore.followOpened
       paneStore.compactComposer = next.compactComposer !== undefined ? next.compactComposer : paneStore.compactComposer
       paneStore.workbenchOpen = next.workbenchOpen !== undefined ? next.workbenchOpen : paneStore.workbenchOpen
+      paneStore.stackColumn = next.stackColumn !== undefined ? next.stackColumn : paneStore.stackColumn
       persistState()
       paneStore.notify()
     }
@@ -933,8 +938,14 @@ window.__ModuleLoader__.load({
 
     /** Pin or clear the manual column override; a new shape starts even. */
     function setColumns(columns) {
-      const grid = planGrid(paneStore.panes.length, columns)
+      const grid = planGrid(paneStore.panes.length, columns, paneStore.stackColumn)
       commit({ panes: paneStore.panes, columns, widths: equalWidths(grid.columns) })
+    }
+
+    /** Choose which column holds the stacked pair in the five-pane shape. */
+    function setStackColumn(column) {
+      const next = column === 2 || column === 3 || column === 4 ? column : 1
+      commit({ panes: paneStore.panes, stackColumn: next })
     }
 
     /** Live column widths while dragging a divider (persisted on release). */
@@ -1010,6 +1021,7 @@ window.__ModuleLoader__.load({
         followOpened: paneStore.followOpened,
         compactComposer: paneStore.compactComposer,
         workbenchOpen: paneStore.workbenchOpen,
+        stackColumn: paneStore.stackColumn,
         flash: paneStore.flash,
       }
     }
@@ -3259,6 +3271,9 @@ window.__ModuleLoader__.load({
           draggable: true,
           'data-ssp-grip': '',
           title: t('pane.drag'),
+          onDoubleClick: () => {
+            if (typeof props.stackColumn === 'number' && typeof props.onSetStack === 'function') props.onSetStack(props.stackColumn)
+          },
         }, [
           h('span', {
             key: 'dot',
@@ -3350,7 +3365,7 @@ window.__ModuleLoader__.load({
         && typeof drag.previewIndex === 'number'
         && drag.previewIndex >= 0
         && !panes.includes(drag.sessionId)
-      const grid = planGrid(panes.length + (addingSessionSlot ? 1 : 0), state.columns)
+      const grid = planGrid(panes.length + (addingSessionSlot ? 1 : 0), state.columns, state.stackColumn)
       // Published by the `main` seat (see KitSeat) — the overlay has no
       // selector hooks of its own.
       const workspaceState = props !== undefined && props !== null ? props.workspaceState : undefined
@@ -3618,6 +3633,8 @@ window.__ModuleLoader__.load({
                   && props.hiddenForActiveSession.has(sessionId),
                 dropTarget: undefined,
                 placement: grid.tiles !== null ? grid.tiles[index] : null,
+                stackColumn: grid.tiles !== null ? grid.tiles[index].column : null,
+                onSetStack: setStackColumn,
                 flash: state.flash === sessionId,
                 compact: state.compactComposer,
                 unread: unreadIds.has(sessionId),
@@ -3910,29 +3927,37 @@ window.__ModuleLoader__.load({
             return
           }
           if (draggedIndex >= 0) {
-            // Highlight the hovered pane directly: no React state, no re-render
-            // per dragover, so the cue follows the pointer in real time.
-            //
-            // Hit-test the drag-start rects, not the live DOM: the preview below
-            // re-orders the panes with CSS `order`, so right after a swap the
-            // element under the pointer belongs to the other pane and reading it
-            // would swap again on the next frame (the panes oscillate).
             const overId = paneIdAtPoint(draggedRects, event.clientX, event.clientY)
-            // Do not paint a marker on the hovered pane: the preview already
-            // moves it, so a marker would appear on the *other* pane's slot.
-            // The dragged pane's own dashed outline is the landing cue.
-            setDomDropTarget(null)
-            // Preview the landing spot live: the hovered pane and the dragged
-            // one trade places (CSS order), so neighbours visibly move aside.
-            // Hovering the dragged pane itself (or leaving every pane) restores
-            // the original order, which is what makes back-and-forth work.
-            const from = paneStore.panes.indexOf(dragStore.sessionId)
-            const to = overId !== null ? paneStore.panes.indexOf(overId) : -1
-            if (from >= 0) {
-              const next = to < 0 || to === from ? paneStore.panes.slice() : movePane(paneStore.panes, from, to)
-              if (previewOrder === null || previewOrder.join('|') !== next.join('|')) {
-                previewOrder = next
-                paintPaneOrder(next)
+            if (planGrid(paneStore.panes.length, paneStore.columns, paneStore.stackColumn).tiles !== null) {
+              // The tiles layout pins each pane to its cell, so the CSS `order`
+              // preview cannot move anything; outline the hovered cell instead
+              // so the landing spot still reads before the release.
+              setDomDropTarget(overId)
+            } else {
+              // Highlight the hovered pane directly: no React state, no re-render
+              // per dragover, so the cue follows the pointer in real time.
+              //
+              // Hit-test the drag-start rects, not the live DOM: the preview below
+              // re-orders the panes with CSS `order`, so right after a swap the
+              // element under the pointer belongs to the other pane and reading it
+              // would swap again on the next frame (the panes oscillate).
+              //
+              // Do not paint a marker on the hovered pane: the preview already
+              // moves it, so a marker would appear on the *other* pane's slot.
+              // The dragged pane's own dashed outline is the landing cue.
+              setDomDropTarget(null)
+              // Preview the landing spot live: the hovered pane and the dragged
+              // one trade places (CSS order), so neighbours visibly move aside.
+              // Hovering the dragged pane itself (or leaving every pane) restores
+              // the original order, which is what makes back-and-forth work.
+              const from = paneStore.panes.indexOf(dragStore.sessionId)
+              const to = overId !== null ? paneStore.panes.indexOf(overId) : -1
+              if (from >= 0) {
+                const next = to < 0 || to === from ? paneStore.panes.slice() : movePane(paneStore.panes, from, to)
+                if (previewOrder === null || previewOrder.join('|') !== next.join('|')) {
+                  previewOrder = next
+                  paintPaneOrder(next)
+                }
               }
             }
             if (dragGhost !== null) {
@@ -3975,11 +4000,26 @@ window.__ModuleLoader__.load({
             return
           }
           if (draggedIndex >= 0) {
+            const rects = draggedRects
+            const movingId = dragStore.sessionId
             draggedIndex = -1
             draggedRects = null
             hideDragGhost()
             setDomDropTarget(null)
             setDrag({ kind: null, sessionId: null, overPane: null, zone: null })
+            // The tiles layout moves nothing during dragover (it pins each pane
+            // to a cell), so the landing pane comes from the drop point itself.
+            if (planGrid(paneStore.panes.length, paneStore.columns, paneStore.stackColumn).tiles !== null) {
+              const overId = paneIdAtPoint(rects ?? [], event.clientX, event.clientY)
+              if (overId === null) return
+              const from = paneStore.panes.indexOf(movingId)
+              const to = paneStore.panes.indexOf(overId)
+              if (from < 0 || to < 0 || from === to) return
+              event.preventDefault()
+              event.stopPropagation()
+              setPanes(movePane(paneStore.panes, from, to))
+              return
+            }
             const landed = previewOrder
             previewOrder = null
             clearPaneOrder()
