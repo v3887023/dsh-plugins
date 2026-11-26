@@ -543,8 +543,7 @@ window.__ModuleLoader__.load({
       return `dsh-resource://file/session/${encodeURIComponent(String(sessionId))}/${path}`
     }
 
-    /** The Session and path inside a `dsh-resource://file/session/<id>/<path>` address. */
-    function parseSessionFileAddress(address) {
+    /** The Session and path inside a `dsh-resource://file/session/<id>/<path>` address. */    function parseSessionFileAddress(address) {
       const prefix = 'dsh-resource://file/session/'
       if (typeof address !== 'string' || !address.startsWith(prefix)) return undefined
       const rest = address.slice(prefix.length)
@@ -561,6 +560,34 @@ window.__ModuleLoader__.load({
         sessionId: decode(rest.slice(0, slash)),
         path: rest.slice(slash + 1).split('/').map(decode).join('/'),
       }
+    }
+
+    /**
+     * Resolve a file link against the Session's current working directory.
+     *
+     * The shipped chat resolves every link with the working directory the
+     * Session reports at click time, so a bare file name produced by an Agent
+     * that moved into a subdirectory still lands on the file it wrote. A pane
+     * hands the address over itself, so it has to make the same resolution.
+     */
+    function resolvePanePath(ctx, sessionId, rawPath) {
+      const text = String(rawPath).replaceAll('\\', '/')
+      if (/^(?:[a-zA-Z]:\/|\/)/u.test(text)) return text
+      let base
+      try {
+        const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : undefined
+        const binding = sessions !== undefined && sessions !== null && typeof sessions.binding === 'function'
+          ? sessions.binding(sessionId)
+          : undefined
+        base = binding !== undefined && binding !== null && binding.session !== undefined && binding.session !== null
+          ? binding.session.projections.faceOf('workingDirectory').getSnapshot()
+          : undefined
+      } catch {
+        base = undefined
+      }
+      const relative = text.replace(/^(?:\.\/)+/u, '')
+      if (typeof base !== 'string' || base.trim() === '') return relative
+      return `${base.replace(/[\\/]+$/u, '')}/${relative}`
     }
 
     /**
@@ -586,11 +613,24 @@ window.__ModuleLoader__.load({
       setCurrentSession(sessionId)
       if (!openShippedSession(ctx, sessionId)) return false
       let attempts = 0
-      // The right column learns its Session from the native page's layout, so
-      // the surface it needs is mounted a beat after the panel flips — and a
-      // large conversation keeps it busy longer than a fixed retry allows.
-      // Keep asking while the service reports "no session surface" and stop on
-      // any other outcome.
+      // The shipped page owns the same link, and only there is the Session's
+      // working directory projection the value the link was written under. When
+      // the native page has rendered the link, click that one (the shipped
+      // handler resolves and opens it); the pane-side address is the fallback
+      // for links the native page has not rendered yet.
+      const findNativeLink = () => {
+        try {
+          const links = document.querySelectorAll('[data-slot="main"] [class*="fileLink"]')
+          for (const link of links) {
+            const text = (link.textContent || '').trim()
+            if (text === '') continue
+            if (text === rawPath || text.endsWith(rawPath) || rawPath.endsWith(text)) return link
+          }
+        } catch {
+          // No native link yet.
+        }
+        return undefined
+      }
       const open = () => {
         attempts += 1
         let panel
@@ -600,9 +640,16 @@ window.__ModuleLoader__.load({
             : undefined
         } catch { /* treated as not revealed yet */ }
         const revealed = panel !== undefined && panel.activePanelId === null
+        if (revealed) {
+          const nativeLink = findNativeLink()
+          if (nativeLink !== undefined && typeof nativeLink.click === 'function') {
+            nativeLink.click()
+            return
+          }
+        }
         if (revealed && sidebarRight !== undefined && sidebarRight !== null && typeof sidebarRight.openResource === 'function') {
           try {
-            sidebarRight.openResource(fileAddressFor(sessionId, rawPath))
+            sidebarRight.openResource(fileAddressFor(sessionId, resolvePanePath(ctx, sessionId, rawPath)))
             return
           } catch (error) {
             const message = String((error && error.message) || error)
