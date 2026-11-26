@@ -827,19 +827,18 @@ window.__ModuleLoader__.load({
       const manual = override === 2 || override === 3 || override === 4 ? override : 0
       const columns = Math.min(manual > 0 ? manual : autoColumns(safe), safe)
       const rows = Math.ceil(safe / columns)
-      // Five panes in an even two-column grid leave one cell empty (4 + 1).
-      // Two stacked pairs beside one tall pane fills the area instead: the
-      // left pane keeps full height, the other four share two columns.
-      if (manual === 0 && safe === 5) {
+      // Five panes: one column holds a stacked pair and the other three keep a
+      // full-height pane each — four columns, every cell used.
+      if (safe === 5 && (manual === 0 || manual === 4)) {
         return {
-          columns: 3,
+          columns: 4,
           rows: 2,
           tiles: [
-            { column: 1, row: 1, rowSpan: 2 },
-            { column: 2, row: 1, rowSpan: 1 },
-            { column: 3, row: 1, rowSpan: 1 },
-            { column: 2, row: 2, rowSpan: 1 },
-            { column: 3, row: 2, rowSpan: 1 },
+            { column: 1, row: 1, rowSpan: 1 },
+            { column: 1, row: 2, rowSpan: 1 },
+            { column: 2, row: 1, rowSpan: 2 },
+            { column: 3, row: 1, rowSpan: 2 },
+            { column: 4, row: 1, rowSpan: 2 },
           ],
         }
       }
