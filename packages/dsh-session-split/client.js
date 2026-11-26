@@ -842,6 +842,22 @@ window.__ModuleLoader__.load({
         }
         return { columns: 4, rows: 2, tiles }
       }
+      // Six panes in four columns: two full-height panes at the ends and the
+      // other four as stacked pairs in the two middle columns — nothing empty.
+      if (safe === 6 && manual === 4) {
+        return {
+          columns: 4,
+          rows: 2,
+          tiles: [
+            { column: 1, row: 1, rowSpan: 2 },
+            { column: 2, row: 1, rowSpan: 1 },
+            { column: 2, row: 2, rowSpan: 1 },
+            { column: 3, row: 1, rowSpan: 1 },
+            { column: 3, row: 2, rowSpan: 1 },
+            { column: 4, row: 1, rowSpan: 2 },
+          ],
+        }
+      }
       return { columns, rows, tiles: null }
     }
 
