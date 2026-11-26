@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
     /** Keyed icon this bundle draws for its structured Session-menu action. */
     const MENU_ICON_KEY = 'session-split.open'
     /** How many panes the workbench holds. */
-    const MAX_PANES = 6
+    const MAX_PANES = 8
     /** How many transcript rows one fallback pane renders. */
     const MAX_ROWS = 240
     /** Drag type carrying a Session row dragged in this page. */
@@ -827,36 +827,23 @@ window.__ModuleLoader__.load({
       const manual = override === 2 || override === 3 || override === 4 ? override : 0
       const columns = Math.min(manual > 0 ? manual : autoColumns(safe), safe)
       const rows = Math.ceil(safe / columns)
-      // Five panes: one column holds a stacked pair and the other three keep a
-      // full-height pane each — four columns, every cell used. Which column
-      // holds the pair is the user's choice (a double-click on a pane).
-      if (safe === 5 && (manual === 0 || manual === 4)) {
-        const stack = stackColumn === 2 || stackColumn === 3 || stackColumn === 4 ? stackColumn : 1
+      // Four columns carry five to eight panes: the ends keep full-height panes
+      // while the columns between them stack two halves each, so the shape is
+      // always full and every pane keeps a usable height.
+      if ((manual === 0 || manual === 4) && safe >= 5 && safe <= 8) {
+        const pairs = safe - 4
+        const stackColumns = pairs === 1
+          ? [stackColumn === 2 || stackColumn === 3 || stackColumn === 4 ? stackColumn : 1]
+          : pairs === 2 ? [2, 3] : pairs === 3 ? [2, 3, 4] : [1, 2, 3, 4]
         const tiles = []
         for (let col = 1; col <= 4; col += 1) {
-          if (col === stack) {
+          if (stackColumns.includes(col)) {
             tiles.push({ column: col, row: 1, rowSpan: 1 }, { column: col, row: 2, rowSpan: 1 })
           } else {
             tiles.push({ column: col, row: 1, rowSpan: 2 })
           }
         }
         return { columns: 4, rows: 2, tiles }
-      }
-      // Six panes in four columns: two full-height panes at the ends and the
-      // other four as stacked pairs in the two middle columns — nothing empty.
-      if (safe === 6 && manual === 4) {
-        return {
-          columns: 4,
-          rows: 2,
-          tiles: [
-            { column: 1, row: 1, rowSpan: 2 },
-            { column: 2, row: 1, rowSpan: 1 },
-            { column: 2, row: 2, rowSpan: 1 },
-            { column: 3, row: 1, rowSpan: 1 },
-            { column: 3, row: 2, rowSpan: 1 },
-            { column: 4, row: 1, rowSpan: 2 },
-          ],
-        }
       }
       return { columns, rows, tiles: null }
     }

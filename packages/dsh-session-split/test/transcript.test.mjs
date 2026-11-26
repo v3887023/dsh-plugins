@@ -172,14 +172,13 @@ assert.deepEqual(api.planGrid(5, 4, 3), {
     { column: 4, row: 1, rowSpan: 2 },
   ],
 })
-assert.deepEqual(api.planGrid(6), { columns: 3, rows: 2, tiles: null })
 // Manual override wins, but never yields more columns than panes.
 assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })
 assert.deepEqual(api.planGrid(5, 2), { columns: 2, rows: 3, tiles: null })
 assert.deepEqual(api.planGrid(5, 3), { columns: 3, rows: 2, tiles: null })
 assert.deepEqual(api.planGrid(2, 4), { columns: 2, rows: 1, tiles: null })
 // Six panes in four columns: two full-height panes, four stacked halves.
-assert.deepEqual(api.planGrid(6, 4), {
+const sixPanes = {
   columns: 4,
   rows: 2,
   tiles: [
@@ -190,8 +189,40 @@ assert.deepEqual(api.planGrid(6, 4), {
     { column: 3, row: 2, rowSpan: 1 },
     { column: 4, row: 1, rowSpan: 2 },
   ],
+}
+assert.deepEqual(api.planGrid(6), sixPanes)
+assert.deepEqual(api.planGrid(6, 4), sixPanes)
+// Seven panes: one full pane, three stacked pairs.
+assert.deepEqual(api.planGrid(7), {
+  columns: 4,
+  rows: 2,
+  tiles: [
+    { column: 1, row: 1, rowSpan: 2 },
+    { column: 2, row: 1, rowSpan: 1 },
+    { column: 2, row: 2, rowSpan: 1 },
+    { column: 3, row: 1, rowSpan: 1 },
+    { column: 3, row: 2, rowSpan: 1 },
+    { column: 4, row: 1, rowSpan: 1 },
+    { column: 4, row: 2, rowSpan: 1 },
+  ],
+})
+// Eight panes: four stacked pairs.
+assert.deepEqual(api.planGrid(8), {
+  columns: 4,
+  rows: 2,
+  tiles: [
+    { column: 1, row: 1, rowSpan: 1 },
+    { column: 1, row: 2, rowSpan: 1 },
+    { column: 2, row: 1, rowSpan: 1 },
+    { column: 2, row: 2, rowSpan: 1 },
+    { column: 3, row: 1, rowSpan: 1 },
+    { column: 3, row: 2, rowSpan: 1 },
+    { column: 4, row: 1, rowSpan: 1 },
+    { column: 4, row: 2, rowSpan: 1 },
+  ],
 })
 assert.deepEqual(api.planGrid(6, 2), { columns: 2, rows: 3, tiles: null })
+assert.deepEqual(api.planGrid(6, 3), { columns: 3, rows: 2, tiles: null })
 assert.deepEqual(api.planGrid(3, 0), { columns: 3, rows: 1, tiles: null })
 assert.deepEqual(api.planGrid(3, 9), { columns: 3, rows: 1, tiles: null })
 assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })
@@ -236,16 +267,17 @@ assert.equal(api.sessionIdFromRowKey(undefined), null)
 
 assert.deepEqual(api.normalizePanes(['a', 'a', 'b', '', 3, null]), ['a', 'b'])
 assert.deepEqual(api.normalizePanes(['a', 'b', 'c', 'd', 'e', 'f']), ['a', 'b', 'c', 'd', 'e', 'f'])
-assert.deepEqual(api.normalizePanes(['a', 'b', 'c', 'd', 'e', 'f', 'g']), ['a', 'b', 'c', 'd', 'e', 'f'])
+assert.deepEqual(api.normalizePanes(['a', 'b', 'c', 'd', 'e', 'f', 'g']), ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 assert.deepEqual(api.normalizePanes('nope'), [])
 assert.deepEqual(api.addPane(['a'], 'b'), ['a', 'b'])
 assert.deepEqual(api.addPane(['a'], 'a'), ['a'])
 assert.deepEqual(api.addPane(['a', 'b', 'c', 'd'], 'e'), ['a', 'b', 'c', 'd', 'e'])
 // A full workbench drops the oldest pane to make room.
-assert.deepEqual(api.addPane(['a', 'b', 'c', 'd', 'e', 'f'], 'g'), ['b', 'c', 'd', 'e', 'f', 'g'])
+assert.deepEqual(api.addPane(['a', 'b', 'c', 'd', 'e', 'f', 'g'], 'h'), ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])
+assert.deepEqual(api.addPane(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'], 'i'), ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'])
 assert.deepEqual(api.removePane(['a', 'b'], 'a'), ['b'])
 assert.deepEqual(api.removePane(undefined, 'a'), [])
-assert.equal(api.MAX_PANES, 6)
+assert.equal(api.MAX_PANES, 8)
 
 // --- markdown ------------------------------------------------------------
 const markdown = api.renderMarkdown('# Title\n\nhello **bold** and `code`\n\n- one\n- two\n\n```js\nconst a = 1\n```\n\n[dsh](https://example.com)', 'k')

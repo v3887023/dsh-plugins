@@ -1,6 +1,6 @@
 # dsh-session-split
 
-A split workbench for DSH: up to six Sessions side by side in the main area,
+A split workbench for DSH: up to eight Sessions side by side in the main area,
 each one running the **shipped Conversation** — the real Chat flow, the real
 composer, real tool cards, real approval and question prompts.
 
@@ -43,12 +43,12 @@ view built from the retained event window.
 
 ## Layout
 
-- 1 to 6 panes in an automatic grid: 2 side by side, 3 as columns, 4 as 2×2,
-  5 as four columns — one holds a stacked pair, the other three keep a
-  full-height pane each, so no cell is empty — 6 as 3×2 in auto, and as two
-  full-height panes at the ends plus two stacked pairs between them when the
-  column control is pinned to 4. The 5-pane shape also applies when the column
-  control is pinned to 4.
+- 1 to 8 panes in an automatic grid: 2 side by side, 3 as columns, 4 as 2×2,
+  and 5–8 as four columns — the ends keep full-height panes, the columns
+  between them stack two halves each, so the shape is always full (5: one
+  stacked pair, 6: two, 7: three, 8: four). The 5–8 shapes also apply when the
+  column control is pinned to 4; a double-click moves a lone stacked pair to
+  another column.
 - A manual column override in the toolbar (`Auto` / `2` / `3` / `4`) pins the
   column count; rows follow from the pane count.
 - **Drag a divider to resize columns** (like an IDE): each pair of neighbouring
@@ -189,7 +189,7 @@ Session row onto the Conversation page already means "reference this chat here"
 
 - **Each Session appears once** — one editable conversation root per Session is
   the rule the Conversation package itself documents.
-- **Six panes maximum**; a full workbench drops the oldest pane to make room.
+- **Eight panes maximum**; a full workbench drops the oldest pane to make room.
 - **The Conversation header is not part of a pane** (see above), so View tabs
   and the subagent tree stay on the native page (↗).
 - Selecting the workbench unmounts the normal Conversation column, which is what
