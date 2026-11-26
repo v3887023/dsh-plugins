@@ -1750,13 +1750,16 @@ window.__ModuleLoader__.load({
       '.ssp-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.ssp-menu-item-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       // User-message outline: a wider menu anchored under its header button.
-      '.ssp-outline{width:320px;max-width:320px;max-height:340px}',
-      '.ssp-outline-item{align-items:flex-start}',
-      '.ssp-outline-index{flex:0 0 auto;min-width:18px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
+      // The row list scrolls on its own and the total sits in a fixed footer,
+      // so the count never scrolls onto the rows underneath it.
+      '.ssp-outline{width:320px;max-width:320px;max-height:340px;display:flex;flex-direction:column;padding:0;overflow:hidden}',
+      '.ssp-outline-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:4px}',
+      '.ssp-outline-item{align-items:flex-start;gap:10px;padding:5px 8px 5px 6px}',
+      '.ssp-outline-index{flex:0 0 auto;min-width:20px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}',
       '.ssp-outline-empty{padding:10px 8px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12px}',
       '.ssp-outline-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ssp-outline-item[data-unloaded] .ssp-outline-text{color:var(--dsw-alias-label-secondary)}',
-      '.ssp-outline-total{position:sticky;bottom:0;margin-top:2px;padding:5px 8px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay,#22262e);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}',
+      '.ssp-outline-total{flex:0 0 auto;padding:5px 10px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay,#22262e);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}',
       '.ssp-picker-new{appearance:none;display:flex;align-items:center;gap:6px;margin:6px 6px 0;padding:7px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;line-height:18px;text-align:left;cursor:pointer}',
       '.ssp-picker-new:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.ssp-picker-new:disabled{opacity:.6;cursor:default}',
@@ -2326,7 +2329,7 @@ window.__ModuleLoader__.load({
         }, menu.items.length === 0
           ? h('div', { key: 'empty', className: 'ssp-outline-empty' }, t('pane.outlineEmpty'))
           : [
-            ...menu.items.map((item) => h('button', {
+            h('div', { key: 'list', className: 'ssp-outline-list' }, menu.items.map((item) => h('button', {
               key: `outline-${item.key}`,
               type: 'button',
               className: 'ssp-menu-item ssp-outline-item',
@@ -2339,7 +2342,7 @@ window.__ModuleLoader__.load({
               // no turn numbers and counts the rows it has.
               h('span', { key: 'n', className: 'ssp-outline-index' }, String(item.turn === null ? item.index + 1 : item.turn)),
               h('span', { key: 't', className: 'ssp-outline-text' }, item.label === '' ? t('pane.outlineNoText') : item.label),
-            ])),
+            ]))),
             menu.wholeLog
               ? h('div', { key: 'total', className: 'ssp-outline-total' }, t('pane.outlineTotal', { count: menu.items.length }))
               : null,
