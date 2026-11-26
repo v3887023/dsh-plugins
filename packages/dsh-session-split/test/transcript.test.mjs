@@ -141,20 +141,32 @@ assert.equal(api.titleFromEvents([]), undefined)
 assert.equal(api.titleFromEvents(null), undefined)
 
 // --- grid planning -------------------------------------------------------
-assert.deepEqual(api.planGrid(0), { columns: 1, rows: 1 })
-assert.deepEqual(api.planGrid(1), { columns: 1, rows: 1 })
-assert.deepEqual(api.planGrid(2), { columns: 2, rows: 1 })
-assert.deepEqual(api.planGrid(3), { columns: 3, rows: 1 })
-assert.deepEqual(api.planGrid(4), { columns: 2, rows: 2 })
-assert.deepEqual(api.planGrid(5), { columns: 3, rows: 2 })
-assert.deepEqual(api.planGrid(6), { columns: 3, rows: 2 })
+assert.deepEqual(api.planGrid(0), { columns: 1, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(1), { columns: 1, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(2), { columns: 2, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(3), { columns: 3, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(4), { columns: 2, rows: 2, tiles: null })
+// Five panes: one tall pane beside two stacked pairs, so no cell is empty.
+assert.deepEqual(api.planGrid(5), {
+  columns: 3,
+  rows: 2,
+  tiles: [
+    { column: 1, row: 1, rowSpan: 2 },
+    { column: 2, row: 1, rowSpan: 1 },
+    { column: 3, row: 1, rowSpan: 1 },
+    { column: 2, row: 2, rowSpan: 1 },
+    { column: 3, row: 2, rowSpan: 1 },
+  ],
+})
+assert.deepEqual(api.planGrid(6), { columns: 3, rows: 2, tiles: null })
 // Manual override wins, but never yields more columns than panes.
-assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2 })
-assert.deepEqual(api.planGrid(2, 4), { columns: 2, rows: 1 })
-assert.deepEqual(api.planGrid(6, 2), { columns: 2, rows: 3 })
-assert.deepEqual(api.planGrid(3, 0), { columns: 3, rows: 1 })
-assert.deepEqual(api.planGrid(3, 9), { columns: 3, rows: 1 })
-assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2 })
+assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })
+assert.deepEqual(api.planGrid(5, 2), { columns: 2, rows: 3, tiles: null })
+assert.deepEqual(api.planGrid(2, 4), { columns: 2, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(6, 2), { columns: 2, rows: 3, tiles: null })
+assert.deepEqual(api.planGrid(3, 0), { columns: 3, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(3, 9), { columns: 3, rows: 1, tiles: null })
+assert.deepEqual(api.planGrid(4, 3), { columns: 3, rows: 2, tiles: null })
 assert.equal(api.autoColumns(1), 1)
 assert.equal(api.autoColumns(2), 2)
 assert.equal(api.autoColumns(4), 2)

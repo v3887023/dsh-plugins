@@ -823,10 +823,27 @@ window.__ModuleLoader__.load({
      */
     function planGrid(count, override) {
       const safe = Math.max(0, Math.min(MAX_PANES, Math.floor(Number(count) || 0)))
-      if (safe === 0) return { columns: 1, rows: 1 }
+      if (safe === 0) return { columns: 1, rows: 1, tiles: null }
       const manual = override === 2 || override === 3 || override === 4 ? override : 0
       const columns = Math.min(manual > 0 ? manual : autoColumns(safe), safe)
-      return { columns, rows: Math.ceil(safe / columns) }
+      const rows = Math.ceil(safe / columns)
+      // Five panes in an even two-column grid leave one cell empty (4 + 1).
+      // Two stacked pairs beside one tall pane fills the area instead: the
+      // left pane keeps full height, the other four share two columns.
+      if (manual === 0 && safe === 5) {
+        return {
+          columns: 3,
+          rows: 2,
+          tiles: [
+            { column: 1, row: 1, rowSpan: 2 },
+            { column: 2, row: 1, rowSpan: 1 },
+            { column: 3, row: 1, rowSpan: 1 },
+            { column: 2, row: 2, rowSpan: 1 },
+            { column: 3, row: 2, rowSpan: 1 },
+          ],
+        }
+      }
+      return { columns, rows, tiles: null }
     }
 
     // ---------------------------------------------------------------------
@@ -3230,7 +3247,12 @@ window.__ModuleLoader__.load({
         // and to remember which Session the user is reading.
         onFocusCapture: () => { setFinishedHere(false); focusPane(ctx, sessionId) },
         onPointerDownCapture: () => { setFinishedHere(false); focusPane(ctx, sessionId) },
-        style: typeof props.span === 'number' && props.span > 1 ? { gridColumn: `span ${props.span}` } : undefined,
+        style: props.placement !== null && props.placement !== undefined
+          ? {
+            gridColumn: String(props.placement.column),
+            gridRow: `${props.placement.row} / span ${props.placement.rowSpan}`,
+          }
+          : typeof props.span === 'number' && props.span > 1 ? { gridColumn: `span ${props.span}` } : undefined,
       }, [
         h('header', {
           key: 'head',
@@ -3596,6 +3618,7 @@ window.__ModuleLoader__.load({
                   && props.hiddenForActiveSession !== undefined
                   && props.hiddenForActiveSession.has(sessionId),
                 dropTarget: undefined,
+                placement: grid.tiles !== null ? grid.tiles[index] : null,
                 flash: state.flash === sessionId,
                 compact: state.compactComposer,
                 unread: unreadIds.has(sessionId),

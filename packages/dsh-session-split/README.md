@@ -44,7 +44,7 @@ view built from the retained event window.
 ## Layout
 
 - 1 to 6 panes in an automatic grid: 2 side by side, 3 as columns, 4 as 2×2,
-  5–6 as 3×2.
+  5 as one tall pane beside two stacked pairs (no empty cell), 6 as 3×2.
 - A manual column override in the toolbar (`Auto` / `2` / `3` / `4`) pins the
   column count; rows follow from the pane count.
 - **Drag a divider to resize columns** (like an IDE): each pair of neighbouring
